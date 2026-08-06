@@ -3,13 +3,35 @@
 #include <typeinfo> 
 using namespace std;
 
-int main(int argc, char* argv[])
+
+int main()
 {
+	int argc = 0;
+	string argv[15];
+	cout << "Enter command line without programm name (args):\n";
+	string input; getline(cin, input);
+
+	int i = 0;
+	string buff = "";
+	while (input[i] != '\0') {
+		if (input[i] != ' ') { buff += input[i]; }
+		else if (!buff.empty()) {
+			argv[argc] = buff; ++argc;
+			buff.clear();
+		}
+		++i;
+	}
+	if (!buff.empty()) {
+		argv[argc] = buff; ++argc;
+		buff.clear();
+	}
+
 	string fname; 
 	size_t size, count;
 	bool hsz = false, hcnt = false;
-	for (int i = 1; i < argc; ++i) {
-		if (strcmp(argv[i], "--help") == 0) {
+	for (int i = 0; i < argc; ++i) {
+		const char* arg = argv[i].c_str();
+		if (strcmp(arg, "--help") == 0) {
 			cout << "CMD Options:\n";
 			cout << "  --help					Show help.\n";
 			cout << "  --size [VALUE]				Set size of matrix used in time tests equal to VALUE.\n";
@@ -29,27 +51,27 @@ int main(int argc, char* argv[])
 			cout << "  -DTYPE=[int, float, double, etc.]	Set type of values in matrixes.\n";
 			return 0;
 		}
-		else if (strcmp(argv[i], "--size") == 0 && i + 1 < argc) {
+		else if (strcmp(arg, "--size") == 0 && i + 1 < argc) {
 			size = stoull(argv[i + 1]); hsz = true; ++i;
 		}
-		else if (strcmp(argv[i], "--count") == 0 && i + 1 < argc){
+		else if (strcmp(arg, "--count") == 0 && i + 1 < argc){
 			count = stoull(argv[i + 1]); hcnt = true; ++i;
 		}
-		else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) {
-			fname = argv[i + 1]; ++i;
+		else if (strcmp(arg, "--out") == 0 && i + 1 < argc) {
+			fname = arg; ++i;
 		}
-		else if (strcmp(argv[i], "--wt") == 0 ||
-			strcmp(argv[i], "--workability_tests") == 0) 
+		else if (strcmp(arg, "--wt") == 0 ||
+			strcmp(arg, "--workability_tests") == 0)
 		{
 			TestSystem::enable_workability_tests();
 		}
-		else if (strcmp(argv[i], "--dac") == 0 ||
-			strcmp(argv[i], "--disable_accuracy_check") == 0) 
+		else if (strcmp(arg, "--dac") == 0 ||
+			strcmp(arg, "--disable_accuracy_check") == 0)
 		{
 			TestSystem::disable_accuracy_check();
 		}
-		else if (strcmp(argv[i], "--ri") == 0 ||
-			strcmp(argv[i], "--random_initialization")) 
+		else if (strcmp(arg, "--ri") == 0 ||
+			strcmp(arg, "--random_initialization"))
 		{
 			TestSystem::enable_random_initialization();
 		}
