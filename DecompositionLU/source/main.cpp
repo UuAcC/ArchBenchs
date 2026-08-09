@@ -48,7 +48,7 @@ int main()
 				<< "							U12: A12->U12;\n"
 				<< "							L22xU22: A22->L22* U22.\n";
 			cout << "  -DREFERENCE_TEST=[ eigen | mkl ]		Set library to compare results with. Works with exactly same matrixes.\n";
-			cout << "  -DTYPE=[int, float, double, etc.]	Set type of values in matrixes.\n";
+			cout << "  -DTYPE=[int, float, double, etc.]		Set type of values in matrixes.\n";
 			return 0;
 		}
 		else if (strcmp(arg, "--size") == 0 && i + 1 < argc) {
@@ -81,5 +81,8 @@ int main()
 	size_t arg2 = (hcnt) ? count : 1;
 
 	TestSystem::run_all_tests(arg1, arg2, fname);
+
+	while (1) {}
+
 	return 0; 
 }
