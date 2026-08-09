@@ -5,7 +5,10 @@ project(${project_name})
 
 file(GLOB hdrs "source/*.h*")
 file(GLOB srcs "source/*.cpp")
-add_executable(${project_name} ${srcs} ${hdrs})
+set(PF "platform_k1921vg1t")
+file(GLOB pf_srcs "${PF}/*.c")
+file(GLOB pf_hdrs "${PF}/*.h")
+add_executable(${project_name} ${srcs} ${hdrs} ${pf_srcs} ${pf_hdrs} ${PF}/source/startup_k1921vg1t.S)
 
 if(DEFINED PRINT_BLOCK_TIMES)
     target_compile_definitions(${project_name} PRIVATE 
