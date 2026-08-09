@@ -3,9 +3,12 @@
 #include <typeinfo> 
 using namespace std;
 
+extern "C" void retarget_init();
 
 int main()
 {
+	retarget_init();
+
 	int argc = 0;
 	string argv[15];
 	cout << "Enter command line without programm name (args):\n";

@@ -17,7 +17,7 @@ set(ADV_MARCH "${BASE_MARCH}_zicsr_zifencei")
 set(MABI "-mabi=ilp32d")
 
 set(ARCH_FLAGS "${ADV_MARCH} ${MABI}")
-set(C_CXX_FLAGS "-nostartfiles ${ARCH_FLAGS}")
+set(C_CXX_FLAGS "-nostartfiles ${ARCH_FLAGS} -DRETARGET -DUSE_LIBC")
 # --------------------------------------------------------------------#
 set(C_CXX_FLAGS "${C_CXX_FLAGS} -ffunction-sections -fdata-sections") #
 # --------------------------------------------------------------------#
