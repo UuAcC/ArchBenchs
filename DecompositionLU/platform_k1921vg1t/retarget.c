@@ -105,9 +105,11 @@ __attribute__((weak)) void _exit(int status) {
 
 __attribute__((weak)) int _read(int file, char *ptr, int len) {
     (void)file;
-    (void)ptr;
-    (void)len;
-    return 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        ptr[i] = retarget_get_char();
+    }
+    return i;
 }
 
 __attribute__((weak)) int _close(int file) {
