@@ -6,7 +6,7 @@ set(CMAKE_SYSTEM_PROCESSOR riscv32)
 set(DEVBOARDS_FOLDER "C:/Users/Maxim/source/devboards")
 set(TOOLCHAIN_PATH "${DEVBOARDS_FOLDER}/xpack-riscv-none-elf-gcc-15.2.0-1")
 set(SDK_ROOT "${DEVBOARDS_FOLDER}/k1921vg1t_sdk")
-set(DEVICE_ROOT "${SDK_ROOT}/platform/Device/K1921VG1T")
+set(DEVICE_ROOT "platform_k1921vg1t")
 set(BSP_ROOT "${SDK_ROOT}/hardware/bsp/NIIET-DEV-K1921VG1T")
 
 set(CMAKE_C_COMPILER "${TOOLCHAIN_PATH}/bin/riscv-none-elf-gcc.exe")
