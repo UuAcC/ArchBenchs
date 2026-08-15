@@ -3,11 +3,15 @@
 #include <typeinfo> 
 using namespace std;
 
-extern "C" void retarget_init();
+extern "C" {
+	void retarget_init();
+	void trng_init(void);
+}
 
 int main()
 {
 	retarget_init();
+	trng_init();
 
 	int argc = 0;
 	string argv[15];
