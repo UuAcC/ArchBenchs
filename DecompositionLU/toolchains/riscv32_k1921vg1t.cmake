@@ -17,23 +17,25 @@ set(ADV_MARCH "${BASE_MARCH}_zicsr_zifencei")
 set(MABI "-mabi=ilp32d")
 
 set(ARCH_FLAGS "${ADV_MARCH} ${MABI}")
-set(C_CXX_FLAGS "-nostartfiles ${ARCH_FLAGS} -DRETARGET -DUSE_LIBC")
+set(C_CXX_FLAGS "-nostartfiles ${ARCH_FLAGS} -DRETARGET -DUSE_LIBC -DSYSCLK_PLL -DHSECLK_VAL=16000000")
 # --------------------------------------------------------------------#
 set(C_CXX_FLAGS "${C_CXX_FLAGS} -ffunction-sections -fdata-sections") #
 # --------------------------------------------------------------------#
-set(COMMON_INCLUDE_FLAGS "-I\"${DEVICE_ROOT}/Include\" -I\"${DEVICE_ROOT}/ldscripts\"")
-set(ALL_INCLUDE_FLAGS "${COMMON_INCLUDE_FLAGS} -I\"${BSP_ROOT}\"")
+set(NEWLIB_ROOT "${TOOLCHAIN_PATH}/riscv-none-elf")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSYSCLK_PLL -DHSECLK_VAL=16000000 ${ALL_INCLUDE_FLAGS} -std=gnu11 ${C_CXX_FLAGS}")
+set(COMMON_INCLUDE_FLAGS "-I\"${DEVICE_ROOT}/Include\" -I\"${DEVICE_ROOT}/ldscripts\"")
+set(SYSTEM_INCLUDE_FLAGS 
+    "-I\"${NEWLIB_ROOT}/include\""
+    "-I\"${NEWLIB_ROOT}/include/c++/15.2.0\""
+    "-I\"${NEWLIB_ROOT}/include/c++/15.2.0/riscv-none-elf\""
+    "-I\"${TOOLCHAIN_PATH}/lib/gcc/riscv-none-elf/15.2.0/include\""
+)
+
+set(ALL_INCLUDE_FLAGS "${SYSTEM_INCLUDE_FLAGS} ${COMMON_INCLUDE_FLAGS} -I\"${BSP_ROOT}\"")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ALL_INCLUDE_FLAGS} -std=gnu11 ${C_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ALL_INCLUDE_FLAGS} -std=gnu++11 -fabi-version=0 ${C_CXX_FLAGS}")
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -x assembler-with-cpp ${COMMON_INCLUDE_FLAGS} ${ARCH_FLAGS}")
-
-set(TARGET_LINKER_SCRIPT "${DEVICE_ROOT}/ldscripts/k1921vg1t_flash.ld")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T\"${TARGET_LINKER_SCRIPT}\" -L\"${DEVICE_ROOT}/ldscripts\" -L\"${BSP_ROOT}\"")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map,\"${PROJECT_NAME}.map\" -nostartfiles ${BASE_MARCH} ${MABI}")
-# ------------------------------------------------------------------------#
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections") #
-# ------------------------------------------------------------------------#
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)

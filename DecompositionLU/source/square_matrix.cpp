@@ -1,6 +1,6 @@
 #include "square_matrix.h"
 #include "limits.h"
-#include <omp.h>
+//#include <omp.h>
 
 // ----------------------------------------< allocation >----------------------------------------------------------
 
@@ -59,6 +59,9 @@ SquareMatrix::SquareMatrix(size_t s, Type* in_arr) {
 	if (in_arr != nullptr) { std::memcpy(array, in_arr, bytes); }
 	else throw bad_alloc();//std::invalid_argument("Initial array is nullptr!");
 }
+
+extern "C" uint32_t trng_get_word(void);
+
 SquareMatrix::SquareMatrix(size_t s, Type min, Type max) {
 	size = s;
 	size_t bytes = size * size * TypeSize;
@@ -66,7 +69,8 @@ SquareMatrix::SquareMatrix(size_t s, Type min, Type max) {
 	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
-	random_device rd; mt19937 gen(rd());
+	uint32_t seed = trng_get_word();
+	mt19937 gen(seed);
 	uniform_real_distribution<Type> common_generator(min, max);
 	uniform_real_distribution<Type> positive_generator(0, max / 2);
 

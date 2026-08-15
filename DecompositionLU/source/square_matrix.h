@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cstdio> 
 #include <random>
 #include <iostream>
-#include <omp.h>
+//#include <omp.h>
 #include <cstring>
+#include <cmath>
 
 using namespace std;
 

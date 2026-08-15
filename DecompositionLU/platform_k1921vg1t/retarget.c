@@ -103,13 +103,12 @@ __attribute__((weak)) void _exit(int status) {
     while(1) {}
 }
 
-__attribute__((weak)) int _read(int file, char *ptr, int len) {
+int _read(int file, char* ptr, int len) {
     (void)file;
-    int i;
-    for (i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         ptr[i] = retarget_get_char();
     }
-    return i;
+    return len;
 }
 
 __attribute__((weak)) int _close(int file) {

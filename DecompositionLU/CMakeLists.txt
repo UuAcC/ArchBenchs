@@ -3,12 +3,39 @@ cmake_minimum_required(VERSION 3.8)
 set(project_name "LU_Benchmark")
 project(${project_name})
 
+enable_language(ASM)
+
 file(GLOB hdrs "source/*.h*")
 file(GLOB srcs "source/*.cpp")
 set(PF "platform_k1921vg1t")
 file(GLOB pf_srcs "${PF}/*.c")
 file(GLOB pf_hdrs "${PF}/*.h")
-add_executable(${project_name} ${srcs} ${hdrs} ${pf_srcs} ${pf_hdrs} ${PF}/source/startup_k1921vg1t.S)
+file(GLOB pfsrc_srcs "${PF}/source/*.c")
+file(GLOB pfinc_hdrs "${PF}/Include/*.h")
+
+set_source_files_properties(${PF}/source/startup_k1921vg1t.S PROPERTIES LANGUAGE ASM)
+
+add_executable(${project_name} 
+		${srcs} 
+		${hdrs} 
+		${pf_srcs} 
+		${pf_hdrs} 
+		${pfsrc_srcs}
+		${pfinc_hdrs}
+		${PF}/source/startup_k1921vg1t.S
+)
+
+target_include_directories(${project_name} PRIVATE "${PF}/Include")
+
+target_link_options(${project_name} PRIVATE
+    -T${CMAKE_CURRENT_SOURCE_DIR}/${PF}/ldscripts/k1921vg1t_flash.ld
+    -L${CMAKE_CURRENT_SOURCE_DIR}/${PF}/ldscripts
+    -L${BSP_ROOT}
+    -Wl,-Map,${project_name}.map
+#---------------------#
+    -Wl,--gc-sections #
+#---------------------#
+)
 
 if(DEFINED PRINT_BLOCK_TIMES)
     target_compile_definitions(${project_name} PRIVATE 
@@ -32,44 +59,12 @@ if(DEFINED REFERENCE_TEST)
     target_compile_definitions(${project_name} PRIVATE 
         REFERENCE_TEST=${REFERENCE_TEST}
     )
-    
     if(${REFERENCE_TEST} STREQUAL "eigen")
         message(STATUS "Using Eigen as reference")
         target_include_directories(${project_name} PRIVATE 
             "${CMAKE_CURRENT_LIST_DIR}/eigen-5.0.0"
         )
-        
-    elseif(${REFERENCE_TEST} STREQUAL "mkl")
-        message(STATUS "Using MKL as reference")
-        
-        if(NOT DEFINED MKLROOT)
-            if(DEFINED ENV{MKLROOT})
-                set(MKLROOT $ENV{MKLROOT})
-                message(STATUS "MKLROOT from environment: ${MKLROOT}")
-            else()
-                message(WARNING "MKLROOT not set! Please set MKLROOT variable or environment variable.")
-            endif()
-        endif()
-        if(WIN32)
-		find_package(MKL CONFIG REQUIRED PATHS $ENV{MKLROOT})
-        	target_link_libraries(${project_name} PRIVATE MKL::MKL)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mkl=parallel")
-	else()
-            	target_compile_options(${project_name} PRIVATE -qmkl=parallel)
-        	target_include_directories(${project_name} PRIVATE ${MKLROOT}/include)
-        	target_link_options(${project_name} PRIVATE
-            		-L${MKLROOT}/lib/intel64
-            		-Wl,--no-as-needed
-        	)
-        	target_link_libraries(${project_name} PRIVATE
-            		mkl_intel_lp64
-            		mkl_intel_thread
-            		mkl_core
-            		iomp5
-            		pthread
-            		m
-            		dl
-       		)
-        endif()
+    else()
+        message(STATUS "Reference not found")
     endif()
 endif()
