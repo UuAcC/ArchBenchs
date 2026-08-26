@@ -25,6 +25,7 @@
 
     .globl _start, main, exit, abort, trap_handler, trap_entry, _hart_halt
     .globl slave_hart_start, plf_init, app_init
+    .extern __libc_init_array
 
 #if defined(USE_DUALCORE) || defined(USE_DUALCORE_SMP)
     .globl slave_main_loop
@@ -103,6 +104,10 @@ _start:
 
     ## application-specific initialization hook
     load_addrword t0, app_init
+    jalr  t0
+
+    ## C++ global constructors init (std::cout etc.)
+    load_addrword t0, __libc_init_array
     jalr  t0
 
     ## main() args

@@ -234,10 +234,10 @@ void ClkInit()
                   (120 << RCU_PLL_DIV_NDIV_Pos );
 	RCU->PLL[0].MOD  = (1 << RCU_PLL_MOD_MOD_Pos   );
 	RCU->PLL[0].FRAC = (1 << RCU_PLL_FRAC_FRAC_Pos );
-	RCU->PLL[0].CFG  = (1 << RCU_PLLCFG_FOUTEN_Pos ) |			// Fout enable
-			       (3 << RCU_PLLCFG_PFD_Pos    ) |
-			       (0 << RCU_PLLCFG_CLKSEL_Pos ) |
-			       (1 << RCU_PLLCFG_VCOMODE_Pos) |
+	RCU->PLL[0].CFG  = (1 << RCU_PLL_CFG_FOUTEN_Pos ) |			// Fout enable
+			       (3 << RCU_PLL_CFG_PFD_Pos    ) |
+			       (0 << RCU_PLL_CFG_CLKSEL_Pos ) |
+			       (1 << RCU_PLL_CFG_VCOMODE_Pos) |
 				   (9 << RCU_PLL_CFG_CP_Pos) |
 			       (0 << RCU_PLL_CFG_ST_Pos) ;				  // ST = 0 for integer divider
 #elif (HSECLK_VAL == 24000000)
@@ -252,10 +252,10 @@ void ClkInit()
                   (120 << RCU_PLL_DIV_NDIV_Pos );
 	RCU->PLL[0].MOD  = (1 << RCU_PLL_MOD_MOD_Pos   );
 	RCU->PLL[0].FRAC = (1 << RCU_PLL_FRAC_FRAC_Pos );
-	RCU->PLL[0].CFG  = (1 << RCU_PLLCFG_FOUTEN_Pos ) |			// Fout enable
-			       (3 << RCU_PLLCFG_PFD_Pos    ) |
-			       (0 << RCU_PLLCFG_CLKSEL_Pos ) |
-			       (1 << RCU_PLLCFG_VCOMODE_Pos) |
+	RCU->PLL[0].CFG  = (1 << RCU_PLL_CFG_FOUTEN_Pos ) |			// Fout enable
+			       (3 << RCU_PLL_CFG_PFD_Pos    ) |
+			       (0 << RCU_PLL_CFG_CLKSEL_Pos ) |
+			       (1 << RCU_PLL_CFG_VCOMODE_Pos) |
 				   (9 << RCU_PLL_CFG_CP_Pos) |
 			       (0 << RCU_PLL_CFG_ST_Pos) ;				  // ST = 0 for integer divider
 #elif (HSECLK_VAL == 27000000)

@@ -6,17 +6,22 @@ using namespace std;
 extern "C" {
 	void retarget_init();
 	void trng_init(void);
+	void __libc_init_array(void);
 }
 
 int main()
 {
 	retarget_init();
 	trng_init();
+	__libc_init_array();
 
 	int argc = 0;
 	string argv[15];
+	//printf();
 	cout << "Enter command line without programm name (args):\n";
-	string input; getline(cin, input);
+	//fflush(stdout);
+	string input;
+	getline(cin, input);
 
 	int i = 0;
 	string buff = "";
