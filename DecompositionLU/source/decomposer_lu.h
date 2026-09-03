@@ -9,6 +9,7 @@ public:
 	static void decompose_LU(const SquareMatrix& A, SquareMatrix& L, SquareMatrix& U);
 	// takes a united LU matrix as input and prints matrices L and U
 	static void print_LU(const SquareMatrix& m, ostream& out);
+	static void out_LU_with_printf(const SquareMatrix& m);
 	// target tested function, first version (non-block, non-recursive)
 	static void get_LU(SquareMatrix& matrix);
 	// target tested function, second version (block, non-recursive), input is not a matrix but its array

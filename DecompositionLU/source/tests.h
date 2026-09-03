@@ -48,17 +48,12 @@ private:
 	// optimization and execution time test, n - size of square matrix, how_many_times - number of runs
 	static void test_time(size_t _n, size_t how_many_times = 1);
 
-#if defined REFERENCE_TEST && (REFERENCE_TEST==eigen || REFERENCE_TEST==mkl)
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	// internal function for test_time, matpoint - pointer to inited matrix, 
 	// which can be used in single_reference_test function.
 	static ReturnedResults single_test_time(size_t n, size_t iter, SquareMatrix*& A);
-#if REFERENCE_TEST == eigen
 	// internal function for test_time, measures execution time using Eigen::PartialPivLU<Eigen::MatrixXd>
 	static ReturnedResults single_reference_test(size_t n, size_t iter, const SquareMatrix& A);
-#elif REFERENCE_TEST == mkl
-	// internal function for test_time, measures execution time using LAPACKE_dgetrf from mkl
-	static ReturnedResults single_reference_test(size_t n, size_t iter, const SquareMatrix& A);
-#endif
 #else
 	// internal function for test_time
 	static ReturnedResults single_test_time(size_t n, size_t iter);
@@ -68,14 +63,6 @@ private:
 
 	static void print_test_start(std::string s = "");
 	static void print_test_end(std::string s = "");
-
-	static std::ofstream file_out;
-	static std::ostream* out;
-
-	template<typename T>
-	static inline void print(const T& value) { *out << value; }
-
-	static inline void p_endl() { *out << std::endl; }
 
 	// function that interprets the input number as the matrix condition number
 	static void analyze_cond(double cond);

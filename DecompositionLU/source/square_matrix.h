@@ -9,10 +9,10 @@
 
 using namespace std;
 
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE 64 // -DBLOCK_SIZE={some value}
+#ifndef LU_BLOCK_SIZE
+#define LU_BLOCK_SIZE 64 // -DLU_BLOCK_SIZE={some value}
 #endif 
-#define LESSER_BLOCK_SIZE BLOCK_SIZE >> 1
+#define LESSER_LU_BLOCK_SIZE LU_BLOCK_SIZE >> 1
 
 #ifdef working_type
 typedef working_type Type;
@@ -80,4 +80,5 @@ public:
 
 	friend istream& operator>>(istream& istr, SquareMatrix& m);
 	friend ostream& operator<<(ostream& ostr, const SquareMatrix& m) noexcept;
+	void out_with_printf() const;
 };

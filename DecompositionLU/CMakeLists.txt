@@ -35,6 +35,8 @@ target_link_options(${project_name} PRIVATE
 #---------------------#
     -Wl,--gc-sections #
 #---------------------#
+    -u _printf_float
+    --specs=nano.specs
 )
 
 if(DEFINED PRINT_BLOCK_TIMES)
@@ -43,9 +45,9 @@ if(DEFINED PRINT_BLOCK_TIMES)
     )
 endif()
 
-if(DEFINED BLOCK_SIZE)
+if(DEFINED LU_BLOCK_SIZE)
     target_compile_definitions(${project_name} PRIVATE 
-        BLOCK_SIZE=${BLOCK_SIZE}
+        LU_BLOCK_SIZE=${LU_BLOCK_SIZE}
     )
 endif()
 

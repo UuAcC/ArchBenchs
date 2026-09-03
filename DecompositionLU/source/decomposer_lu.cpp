@@ -20,8 +20,8 @@ void pbt(const char* mess, long long value) {
 
 void DecomposerLU::block_get_LU(Type* matrix_array_p, size_t curr_sz, size_t start_sz) 
 {
-	const int block_size = BLOCK_SIZE;
-	const int kbs = LESSER_BLOCK_SIZE;
+	const int block_size = LU_BLOCK_SIZE;
+	const int kbs = LESSER_LU_BLOCK_SIZE;
 
 	int curr_size = (int)curr_sz;
 	const int start_size = (int)start_sz;
@@ -346,4 +346,24 @@ void DecomposerLU::print_LU(const SquareMatrix& m, ostream& out) {
 		}
 		out << endl;
 	} out << endl;
+}
+
+void DecomposerLU::out_LU_with_printf(const SquareMatrix& m) {
+	const size_t n = m.get_size();
+	printf("Matrix L:\n");
+	for (size_t i = 0; i < n; i++) {
+		for (size_t j = 0; j < n; j++) {
+			if (j < i) printf("%.2f ", m(i, j));
+			else printf("%d ", (int)(i == j));
+		}
+		printf("\r\n");
+	} printf("\r\n");
+	printf("Matrix U:\n");
+	for (size_t i = 0; i < n; i++) {
+		for (size_t j = 0; j < n; j++) {
+			if (j >= i) printf("%.2f ", m(i, j));
+			else printf("0 ");
+		}
+		printf("\r\n");
+	} printf("\r\n");
 }

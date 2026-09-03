@@ -40,6 +40,9 @@ void retarget_init()
     RCU->UARTCFG[RETARGET_UART_NUM].UARTCFG = (uartclk_ref << RCU_UARTCFG_CLKSEL_Pos) |
                                               	  	  RCU_UARTCFG_CLKEN_Msk |
 													  RCU_UARTCFG_RSTDIS_Msk;
+    RETARGET_UART_PORT->OUTENSET = (1 << 1); //del
+    RETARGET_UART_PORT->OUTMODE &= ~(3 << (2 * 0));
+    RETARGET_UART_PORT->PULLMODE |= (1 << 0);
     RETARGET_UART->IBRD = baud_icoef;
     RETARGET_UART->FBRD = baud_fcoef;
     RETARGET_UART->LCRH = UART_LCRH_FEN_Msk | (3 << UART_LCRH_WLEN_Pos);
@@ -105,10 +108,14 @@ __attribute__((weak)) void _exit(int status) {
 
 int _read(int file, char* ptr, int len) {
     (void)file;
-    for (int i = 0; i < len; i++) {
-        ptr[i] = retarget_get_char();
+    int i = 0;
+    while (i < len) {
+        char ch = (char)retarget_get_char();
+        if (ch == '\r') { ch = '\n'; }
+        ptr[i] = ch; ++i;
+        if (ch == '\n') { break; }
     }
-    return len;
+    return i;
 }
 
 __attribute__((weak)) int _close(int file) {

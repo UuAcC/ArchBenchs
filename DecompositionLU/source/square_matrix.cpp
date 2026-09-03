@@ -17,7 +17,8 @@ void* aligned_malloc(size_t size, size_t alignment) {
 	return _aligned_malloc(size, alignment);
 #else
 	size_t alloc_size = round_up(size, alignment);
-	return aligned_alloc(alignment, alloc_size);
+	/*return aligned_alloc(alignment, alloc_size);*/
+	return malloc(alloc_size * sizeof(Type));
 #endif
 }
 void aligned_free(void* ptr) {
@@ -37,7 +38,7 @@ SquareMatrix::SquareMatrix(size_t s, bool init_diag_dominant) {
 	size_t sz_sqr = size * size;
 	size_t bytes = sz_sqr * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	if (init_diag_dominant) {
@@ -53,7 +54,7 @@ SquareMatrix::SquareMatrix(size_t s, Type* in_arr) {
 	size = s;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	if (in_arr != nullptr) { std::memcpy(array, in_arr, bytes); }
@@ -66,7 +67,7 @@ SquareMatrix::SquareMatrix(size_t s, Type min, Type max) {
 	size = s;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	uint32_t seed = trng_get_word();
@@ -95,7 +96,7 @@ SquareMatrix::SquareMatrix(const SquareMatrix& m) {
 	size = m.size;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	memcpy(array, m.array, bytes);
@@ -107,7 +108,7 @@ SquareMatrix& SquareMatrix::operator=(const SquareMatrix& m) {
 	size = m.size;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	memcpy(array, m.array, bytes);
@@ -161,7 +162,7 @@ SquareMatrix SquareMatrix::operator-(const SquareMatrix& m) {
 SquareMatrix SquareMatrix::operator*(const SquareMatrix& m)
 {
 	const size_t n = size;
-	const size_t block_size = BLOCK_SIZE;
+	const size_t block_size = LU_BLOCK_SIZE;
 
 	SquareMatrix res(n);
 
@@ -290,6 +291,14 @@ ostream& operator<<(ostream& ostr, const SquareMatrix& m) noexcept {
 		ostr << endl;
 	}
 	return ostr;
+}
+void SquareMatrix::out_with_printf() const {
+	const size_t n = this->size;
+	for (size_t i = 0; i < n; i++) {
+		for (size_t j = 0; j < n; j++)
+			printf("%.2f ", this->operator()(i, j));
+		printf("\r\n");
+	}
 }
 
 // ----------------------------------------------------------------------------------------------------------------

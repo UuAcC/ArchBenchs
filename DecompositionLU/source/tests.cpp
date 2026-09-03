@@ -18,10 +18,20 @@ bool TestSystem::test_LU(SquareMatrix& A, std::string test_num,
 		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 
 	print_test_start(test_num);
-	analyze_cond(infinite_cond_A); p_endl(); p_endl();
-	if (print_a) { print("Matrix A:\n"); print(A); p_endl(); }
-	if (print_lu) { DecomposerLU::print_LU(LU, *out); }
-	if (print_res) { print("Matrix Res = L * U:\n"); print(Res); }
+	analyze_cond(infinite_cond_A);
+	printf("\r\n\r\n");
+	if (print_a) { 
+		printf("Matrix A:\n"); 
+		A.out_with_printf();
+		printf("\r\n");
+	}
+	if (print_lu) { 
+		DecomposerLU::out_LU_with_printf(LU); 
+	}
+	if (print_res) { 
+		printf("Matrix Res = L * U:\n"); 
+		Res.out_with_printf(); 
+	}
 	print_test_end(test_num);
 
 	return A == Res;
@@ -57,7 +67,7 @@ bool TestSystem::test3() {
 }
 
 bool TestSystem::test4() {
-	const size_t n = 100;
+	const size_t n = 50;
 	SquareMatrix A(n, -1e6, 1e6);
 	return test_LU(A, "4");
 }
@@ -76,7 +86,7 @@ bool TestSystem::test4() {
 bool TestSystem::do_accuracy_check = true;
 bool TestSystem::random_initialization = false;
 
-#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 ReturnedResults TestSystem::single_test_time(size_t n, size_t iter, SquareMatrix*& A) {
 	ReturnedResults results;
 
@@ -117,7 +127,6 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter, SquareMatrix
 	else { results.is_correct = false; }
 	return results;
 }
-#if REFERENCE_TEST == eigen
 
 #include <Eigen/Dense>      
 #include <Eigen/LU>    
@@ -164,45 +173,6 @@ ReturnedResults TestSystem::single_reference_test(size_t n, size_t iter, const S
 
 #else
 
-#include <mkl_lapacke.h>
-ReturnedResults TestSystem::single_reference_test(size_t n, size_t iter, const SquareMatrix& sqmtr) {
-	ReturnedResults results;
-	SquareMatrix A(sqmtr);
-	lapack_int* ipiv_ptr = new lapack_int[n];
-
-	TP start_LU = NOW;
-	lapack_int info = LAPACKE_dgetrf(LAPACK_ROW_MAJOR, n, n, A.get_array(), n, ipiv_ptr);
-	results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
-
-	if (do_accuracy_check) {
-		SquareMatrix L(n), U(n);
-		DecomposerLU::decompose_LU(A, L, U);
-		SquareMatrix Res = L * U;
-		double infinite_cond_A = (Res - sqmtr).get_infinite_norm() /
-			(sqmtr.get_infinite_norm() * SquareMatrix::mashine_eps);
-		results.is_correct = (Res == sqmtr);
-
-		bool consol = (out == &cout);
-		if (consol) { *out << "\033[33m"; }
-		print("   Reference test "); print(iter + 1);
-		print(". LU Time: ");
-		print(results.LUTime.count());
-
-		print(". Test result: ");
-		if (results.is_correct) { if (consol) *out << "\033[32m"; print("true"); }
-		else { if (consol) *out << "\033[31m"; print("false"); }
-
-		if (consol) *out << "\033[0m";
-
-		p_endl();
-	}
-	else { results.is_correct = false; }
-	return results;
-}
-
-#endif
-
-#else
 ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 	ReturnedResults results;
 	TP start_init = NOW;
@@ -229,17 +199,10 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 
 		results.is_correct = (A == Res);
 
-		p_endl();
-		print(iter + 1); print(") ");
+		printf("\n%u) ", iter + 1);
 		analyze_cond(infinite_cond_A);
-		print(" Test result: ");
-		bool consol = (out == &cout);
-		if (results.is_correct) { if (consol) *out << "\033[32m"; print("true"); }
-		else { if (consol) *out << "\033[31m"; print("false"); }
-		if (consol) *out << "\033[0m";
-		print(". LU Time: ");
-		print(results.LUTime.count());
-		p_endl();
+		printf(" Test result: %s. ", results.is_correct ? "true" : "false");
+		printf("LU Time: %lld\n", results.LUTime.count());
 	}
 	else { results.is_correct = false; }
 	return results;
@@ -249,15 +212,15 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 void TestSystem::test_time(size_t _n, size_t how_many_times) {
 	print_test_start("time");
 	chrono::milliseconds time_init{ 1000000000 }, total_time{ 1000000000 }, time_LU{ 1000000000 };
-#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	chrono::milliseconds time_LU_ref{ 1000000000 };
 #endif
 	const size_t n = _n;
 	double cc = 0, incc = 0;
-	print("Testing with n = "); print(_n); print(", ");
-	print(how_many_times); print(" times:"); p_endl();
+	printf("Testing with n = %u, ", _n); 
+	printf("%u", how_many_times); printf(" times:\n");
 	for (size_t iter = 0; iter < how_many_times; ++iter) {
-#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 		SquareMatrix* A = new SquareMatrix(n);
 		ReturnedResults res = single_test_time(n, iter, A);
 #else
@@ -270,47 +233,43 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 			if (res.is_correct) { ++cc; }
 			else { ++incc; }
 		}
-#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 		ReturnedResults resref = single_reference_test(n, iter, *A);
 		time_LU_ref = (time_LU_ref > resref.LUTime) ? resref.LUTime : time_LU_ref;
 #endif
 	}
-	print("\nMinimum time for init random matrix: ");
-	print(time_init.count());
+	printf("\nMinimum time for init random matrix: ");
+	printf("%lld", time_init.count());
 
-	print(" ms\nMinimum time for LU decomposition: ");
-	print(time_LU.count());
-#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
+	printf(" ms\nMinimum time for LU decomposition: ");
+	printf("%lld", time_LU.count());
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	print(" ms\nMinimum time for reference LU decomposition: ");
 	print(time_LU_ref.count());
 #endif
-	print(" ms\nMinimum total time: ");
-	print(total_time.count());
+	printf(" ms\nMinimum total time: ");
+	printf("%lld", total_time.count());
 
 	if (do_accuracy_check) {
-		print(" ms\n\nTotal test result: "); print(cc / (cc + incc) * 100);
-		print("%\nCorrect count: "); print(cc);
-		print("\nIncorrect count: "); print(incc);
+		printf(" ms\n\nTotal test result: "); printf("%f", cc / (cc + incc) * 100);
+		printf("%\nCorrect count: "); printf("%f", cc);
+		printf("\nIncorrect count: "); printf("%f", incc);
 	}
-	print("\n-------------------------------------------------------------------------------------------------\n");
+	printf("\n-------------------------------------------------------------------------------------------------\n");
 }
 
 // ----------------------------------------------------------------------------------------------------------------
 
 // ----------------------------------------< printing >------------------------------------------------------------
 
-std::ofstream TestSystem::file_out;
-std::ostream* TestSystem::out = &std::cout;
-
 void TestSystem::print_test_start(std::string s) {
-	print("\n------------------------------------------- Test ");
-	print(s); print(" -------------------------------------------");
-	p_endl();
+	printf("\n------------------------------------------- Test %s -------------------------------------------\n", 
+		s.c_str());
 }
 
 void TestSystem::print_test_end(std::string s) {
-	print("----------------------------------------------------------------------------------------------\nTest");
-	print(s); print(": ");
+	printf("----------------------------------------------------------------------------------------------\nTest %s: ", 
+		s.c_str());
 }
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -332,66 +291,39 @@ static double bytes_to_Gb(double val) {
 	return val / 268435456.0;
 }
 void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
-	if (filename != "") {
-		file_out.open(filename);
-		if (!file_out.is_open()) {
-			std::cerr << "Failed to open file: " << filename << std::endl;
-			out = &std::cout;
-		}
-		else { out = &file_out; }
-	}
-	print("TestSystem:\nTesting with values type: ");
-	print(typeid(Type).name());
-	print("\nRequires "); 
-	print(bytes_to_Gb((double)(n * n * sizeof(Type)))); 
-	print("Gb of RAM\n");
-	bool consol = (out == &cout);
-#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
-	if (consol) { *out << "\033[33m"; }
-	print("Reference test library: ");
-#if REFERENCE_TEST == eigen
-	print("Eigen 5.0.0");
-#else 
-	print("Intel MKL");
-#endif
-	if (consol) *out << "\033[0m";
+	printf("TestSystem:\nTesting with values type: ");
+	printf("%s", typeid(Type).name());
+	printf("\nRequires "); 
+	printf("%f", bytes_to_Gb((double)(n * n * sizeof(Type))));
+	printf("Gb of RAM\n");
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
+	printf("Reference test library: Eigen 5.0.0");
 #endif
 	bool last_res;
 	for (auto TestPtr : workability_tests) {
 		last_res = (*TestPtr)();
-		if (consol) {
-			if (last_res) *out << "\033[32m";
-			else *out << "\033[31m";
-		}
-		print((last_res) ? "true\n\n" : "false\n\n");
-		if (consol) *out << "\033[0m";
-	} p_endl();
+		printf("%s", (last_res) ? "true\n\n" : "false\n\n");
+	}
 	test_time(n, count);
-
-	if (filename != "") { file_out.close(); }
 }
 
 enum cond_quality { good, ill, singular };
 void TestSystem::analyze_cond(double cond) {
-	print("Infinite cond(A): "); print(cond); print("; ");
+	printf("Infinite cond(A): "); printf("%f; ", cond);
 	cond_quality cq;
 	if (cond < 1e+3) { cq = cond_quality::good; }
 	else {
 		if (cond >= 1e+3 && cond <= 1e+6) { cq = cond_quality::ill; }
 		else { cq = cond_quality::singular; }
 	}
-	bool consol = out == &cout;
 	switch (cq) {
 	case cond_quality::good:
-		if (consol) { *out << "\033[32m"; }
-		print("Matrix is good-conditioned."); break;
+		printf("Matrix is good-conditioned."); break;
 	case cond_quality::ill:
-		if (consol) { *out << "\033[33m"; }
-		print("WARNING! Matrix is ill-conditioned."); break;
+		printf("WARNING! Matrix is ill-conditioned."); break;
 	case cond_quality::singular:
-		if (consol) { *out << "\033[31m"; }
-		print("CRITICAL! Matrix is singular-conditioned!"); break;
-	} if (consol) { *out << "\033[0m"; }
+		printf("CRITICAL! Matrix is singular-conditioned!"); break;
+	}
 }
 
 // ----------------------------------------------------------------------------------------------------------------
