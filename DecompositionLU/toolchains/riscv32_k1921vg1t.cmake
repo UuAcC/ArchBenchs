@@ -42,33 +42,3 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-
-#C:
-#	-DSYSCLK_PLL -DHSECLK_VAL=16000000 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\Include" 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\ldscripts" 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\hardware\bsp\NIIET-DEV-K1921VG1T" 
-#	-std=gnu11 
-#	-nostartfiles 
-#	-march=rv32imafdc_zicsr_zifencei -mabi=ilp32d
-
-#ASM:
-#	-x assembler-with-cpp 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\Include" 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\ldscripts" 
-###############	-include"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\Include\common_asm.h"
-#	-march=rv32imafdc_zicsr_zifencei -mabi=ilp32d
-
-#C++:
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\Include" 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\ldscripts" 
-#	-I"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\hardware\bsp\NIIET-DEV-K1921VG1T" 
-#	-std=gnu++11 -fabi-version=0 
-#	-nostartfiles -march=rv32imafdc_zicsr_zifencei -mabi=ilp32d
-
-#Linker:
-#	-T "C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\ldscripts\k1921vg1t_flash.ld" 
-#	-L"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\platform\Device\K1921VG1T\ldscripts" 
-#	-L"C:\Users\Maxim\source\devboards\k1921vg1t_sdk\hardware\bsp\NIIET-DEV-K1921VG1T" 
-#	-Wl,-Map,"hash.map" 
-#	-nostartfiles -march=rv32imafdc -mabi=ilp32d

@@ -112,17 +112,10 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter, SquareMatrix
 
 		results.is_correct = (*A == Res);
 
-		p_endl();
-		print(iter + 1); print(") ");
+		printf("\n%u) ", iter + 1);
 		analyze_cond(infinite_cond_A);
-		print(" Test result: ");
-		bool consol = (out == &cout);
-		if (results.is_correct) { if (consol) *out << "\033[32m"; print("true"); }
-		else { if (consol) *out << "\033[31m"; print("false"); }
-		if (consol) *out << "\033[0m";
-		print(". LU Time: ");
-		print(results.LUTime.count());
-		p_endl();
+		printf(" Test result: %s. ", results.is_correct ? "true" : "false");
+		printf("LU Time: %lld\n", results.LUTime.count());
 	}
 	else { results.is_correct = false; }
 	return results;
@@ -154,18 +147,9 @@ ReturnedResults TestSystem::single_reference_test(size_t n, size_t iter, const S
 
 		results.is_correct = error < SquareMatrix::mashine_eps;
 
-		bool consol = (out == &cout);
-		if (consol) { *out << "\033[33m"; }
-		print("   Reference test "); print(iter + 1);
-		print(". LU Time: ");
-		print(results.LUTime.count());
-
-		print(". Test result: ");
-		if (results.is_correct) { if (consol) *out << "\033[32m"; print("true"); }
-		else { if (consol) *out << "\033[31m"; print("false"); }
-
-		if (consol) *out << "\033[0m";
-		p_endl();
+		printf("   Reference test %u. ", iter + 1);
+		printf("LU Time: %lld. ", results.LUTime.count());
+		printf(" Test result: %s.\n", results.is_correct ? "true" : "false");
 	}
 	else { results.is_correct = false; }
 	return results;
@@ -239,21 +223,25 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 #endif
 	}
 	printf("\nMinimum time for init random matrix: ");
-	printf("%lld", time_init.count());
+	string otpt = to_string(time_init.count());
+	printf("%s", otpt.c_str());
 
 	printf(" ms\nMinimum time for LU decomposition: ");
-	printf("%lld", time_LU.count());
+	otpt = to_string(time_LU.count());
+	printf("%s", otpt.c_str());
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
-	print(" ms\nMinimum time for reference LU decomposition: ");
-	print(time_LU_ref.count());
+	printf(" ms\nMinimum time for reference LU decomposition: ");
+	otpt = to_string(time_LU_ref.count());
+	printf("%s", otpt.c_str());
 #endif
 	printf(" ms\nMinimum total time: ");
-	printf("%lld", total_time.count());
+	otpt = to_string(total_time.count());
+	printf("%s", otpt);
 
 	if (do_accuracy_check) {
-		printf(" ms\n\nTotal test result: "); printf("%f", cc / (cc + incc) * 100);
-		printf("%\nCorrect count: "); printf("%f", cc);
-		printf("\nIncorrect count: "); printf("%f", incc);
+		printf(" ms\n\nTotal test result: "); printf("%2f", cc / (cc + incc) * 100);
+		printf("%\nCorrect count: "); printf("%2f", cc);
+		printf("\nIncorrect count: "); printf("%2f", incc);
 	}
 	printf("\n-------------------------------------------------------------------------------------------------\n");
 }
