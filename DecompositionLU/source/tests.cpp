@@ -5,36 +5,35 @@
 
 std::vector<WorkabilityTestPtr> TestSystem::workability_tests;
 
-bool TestSystem::test_LU(SquareMatrix& A, std::string test_num,
-	bool print_a, bool print_lu, bool print_res) {
-
-	const size_t n = A.get_size();
-	SquareMatrix LU(A);
-	DecomposerLU::block_get_LU(LU.get_array(), n, n);
-	SquareMatrix L(n), U(n);
-	DecomposerLU::decompose_LU(LU, L, U);
-	SquareMatrix Res = L * U;
-	double infinite_cond_A = (Res - A).get_infinite_norm() /
-		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
-
+bool TestSystem::test_LU(SquareMatrix& A, std::string test_num, bool print_a, bool print_lu, bool print_res) {
 	print_test_start(test_num);
-	analyze_cond(infinite_cond_A);
-	printf("\r\n\r\n");
-	if (print_a) { 
-		printf("Matrix A:\n"); 
+	if (print_a) {
+		printf("Matrix A:\n");
 		A.out_with_printf();
 		printf("\r\n");
 	}
-	if (print_lu) { 
-		DecomposerLU::out_LU_with_printf(LU); 
+	const size_t n = A.get_size();
+	SquareMatrix* LU = new SquareMatrix(A);
+	DecomposerLU::block_get_LU(LU->get_array(), n);
+	if (print_lu) {
+		DecomposerLU::out_LU_with_printf(*LU);
 	}
-	if (print_res) { 
-		printf("Matrix Res = L * U:\n"); 
-		Res.out_with_printf(); 
+	SquareMatrix L(n), U(n);
+	DecomposerLU::decompose_LU((*LU), L, U);
+	delete LU; LU = nullptr;
+	L = L * U;
+	double infinite_cond_A = (L - A).get_infinite_norm() /
+		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
+	if (print_res) {
+		printf("Matrix Res = L * U:\n");
+		L.out_with_printf();
 	}
+	printf("\r\n");
+	analyze_cond(infinite_cond_A);
+	printf("\r\n");
 	print_test_end(test_num);
 
-	return A == Res;
+	return A == L;
 }
 
 bool TestSystem::test1() {
@@ -164,24 +163,25 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 	SquareMatrix A(n);
 	if (random_initialization) { A = SquareMatrix(n, 1e-6, 1e6); }
 	else { A = SquareMatrix(n, true); }
-	SquareMatrix LU(A);
+	SquareMatrix* LU = new SquareMatrix(A);
 
 	results.InitTime = duration_cast<milliseconds>(NOW - start_init);
 
 	TP start_LU = NOW;
-	DecomposerLU::block_get_LU(LU.get_array(), n, n);
+	DecomposerLU::block_get_LU(LU->get_array(), n);
 	results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
 
 	results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
 
 	if (do_accuracy_check) {
 		SquareMatrix L(n), U(n);
-		DecomposerLU::decompose_LU(LU, L, U);
-		SquareMatrix Res = L * U;
-		double infinite_cond_A = (Res - A).get_infinite_norm() /
+		DecomposerLU::decompose_LU((*LU), L, U);
+		delete LU; LU = nullptr;
+		L = L * U;
+		double infinite_cond_A = (L - A).get_infinite_norm() /
 			(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 
-		results.is_correct = (A == Res);
+		results.is_correct = (A == L);
 
 		printf("\n%u) ", iter + 1);
 		analyze_cond(infinite_cond_A);
@@ -236,7 +236,7 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 #endif
 	printf(" ms\nMinimum total time: ");
 	otpt = to_string(total_time.count());
-	printf("%s", otpt);
+	printf("%s", otpt.c_str());
 
 	if (do_accuracy_check) {
 		printf(" ms\n\nTotal test result: "); printf("%2f", cc / (cc + incc) * 100);
@@ -275,15 +275,20 @@ void TestSystem::disable_accuracy_check() { do_accuracy_check = false; }
 
 void TestSystem::enable_random_initialization() { random_initialization = true; }
 
-static double bytes_to_Gb(double val) {
-	return val / 268435456.0;
+static void print_requires(double val) {
+	double result = val * 4;
+	int i = 0;
+	for (; i < 3; ++i) {
+		if (result < 500.0) break;
+		result /= 1024.0;
+	}
+	printf("Requires >= %3f %s of RAM\n", result, 
+		(i == 0) ? "bytes" : ((i == 1) ? "Kb" : ((i == 2) ? "Mb" : "Gb")));
 }
 void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
-	printf("TestSystem:\nTesting with values type: ");
-	printf("%s", typeid(Type).name());
-	printf("\nRequires "); 
-	printf("%f", bytes_to_Gb((double)(n * n * sizeof(Type))));
-	printf("Gb of RAM\n");
+	printf("TestSystem:\nTesting with values type: %s\n", typeid(Type).name());
+	const int reqsz = (n > 50) ? n : 50;
+	print_requires((double)(reqsz * reqsz * sizeof(Type)));
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	printf("Reference test library: Eigen 5.0.0");
 #endif

@@ -14,5 +14,5 @@ public:
 	// target tested function, first version (non-block, non-recursive)
 	static void get_LU(SquareMatrix& matrix);
 	// target tested function, second version (block, non-recursive), input is not a matrix but its array
-	static void block_get_LU(Type* m_arr_p, size_t curr_sz, size_t start_sz);
+	static void block_get_LU(Type* matrix_array_p, size_t matrix_size);
 };
