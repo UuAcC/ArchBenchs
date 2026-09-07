@@ -195,6 +195,63 @@ SquareMatrix SquareMatrix::operator*(const SquareMatrix& m)
 	return res;
 }
 
+SquareMatrix& SquareMatrix::operator+=(const SquareMatrix& m) {
+#pragma omp parallel for collapse(2)
+	for (size_t i = 0; i < m.size; i++) {
+		for (size_t j = 0; j < m.size; j++) {
+			this->operator()(i, j) += m(i, j);
+		}
+	} return *this;
+}
+
+SquareMatrix& SquareMatrix::operator-=(const SquareMatrix& m) {
+#pragma omp parallel for collapse(2)
+	for (size_t i = 0; i < m.size; i++) {
+		for (size_t j = 0; j < m.size; j++) {
+			this->operator()(i, j) -= m(i, j);
+		}
+	} return *this;
+}
+
+SquareMatrix& SquareMatrix::operator*=(const SquareMatrix& m) {
+	const size_t n = size;
+	const size_t block_size = LU_BLOCK_SIZE;
+
+#pragma omp parallel
+	{
+		Type* buffer = new Type[n]();
+#pragma omp for collapse(2)
+		for (int i0 = 0; i0 < n; i0 += block_size) {
+			for (int j0 = 0; j0 < n; j0 += block_size) {
+				int i1 = std::min(i0 + block_size, n);
+				int j1 = std::min(j0 + block_size, n);
+				for (int k0 = 0; k0 < n; k0 += block_size) {
+					int k1 = std::min(k0 + block_size, n);
+					for (int i = i0; i < i1; ++i) {
+						Type* this_row = this->array + i * n;
+						for (int j = j0; j < j1; ++j) {
+							buffer[j] = 0;
+						}
+						for (int k = k0; k < k1; ++k) {
+							Type this_ik = this_row[k];
+							Type* m_row = m.array + k * n;
+						#pragma omp simd
+							for (int j = j0; j < j1; ++j) {
+								buffer[j] += this_ik * m_row[j];
+							}
+						}
+						for (int j = j0; j < j1; ++j) {
+							this_row[j] = buffer[j];
+						}
+					}
+				}
+			}
+		}
+		delete[] buffer;
+	}
+	return *this;
+}
+
 // ----------------------------------------------------------------------------------------------------------------
 
 // ----------------------------------------< comparison >----------------------------------------------------------

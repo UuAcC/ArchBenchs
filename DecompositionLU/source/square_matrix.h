@@ -60,6 +60,10 @@ public:
 	SquareMatrix operator-(const SquareMatrix& m);
 	SquareMatrix operator*(const SquareMatrix& m);
 
+	SquareMatrix& operator+=(const SquareMatrix& m);
+	SquareMatrix& operator-=(const SquareMatrix& m);
+	SquareMatrix& operator*=(const SquareMatrix& m);
+
 	//  comparison 
 
 	bool operator==(const SquareMatrix& m);

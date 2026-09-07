@@ -21,7 +21,7 @@ bool TestSystem::test_LU(SquareMatrix& A, std::string test_num, bool print_a, bo
 	SquareMatrix L(n), U(n);
 	DecomposerLU::decompose_LU((*LU), L, U);
 	delete LU; LU = nullptr;
-	L = L * U;
+	L *= U;
 	double infinite_cond_A = (L - A).get_infinite_norm() /
 		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 	if (print_res) {
@@ -177,7 +177,7 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 		SquareMatrix L(n), U(n);
 		DecomposerLU::decompose_LU((*LU), L, U);
 		delete LU; LU = nullptr;
-		L = L * U;
+		L *= U;
 		double infinite_cond_A = (L - A).get_infinite_norm() /
 			(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 
@@ -186,7 +186,7 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 		printf("\n%u) ", iter + 1);
 		analyze_cond(infinite_cond_A);
 		printf(" Test result: %s. ", results.is_correct ? "true" : "false");
-		printf("LU Time: %lld\n", results.LUTime.count());
+		printf("LU Time: %s\n", to_string(results.LUTime.count()).c_str());
 	}
 	else { results.is_correct = false; }
 	return results;
@@ -275,8 +275,16 @@ void TestSystem::disable_accuracy_check() { do_accuracy_check = false; }
 
 void TestSystem::enable_random_initialization() { random_initialization = true; }
 
-static void print_requires(double val) {
-	double result = val * 4;
+static void print_requires(size_t mtxsz) {
+	const size_t tpsz = sizeof(Type);
+	const size_t reqsz = (mtxsz > 50) ? mtxsz : 50;
+	double result = (double)(reqsz * reqsz * tpsz * 3);
+	char* val = getenv("OMP_NUM_THREADS");
+	int threads = (val) ? atoi(val) : 0;
+	result += (double)(tpsz * reqsz * threads);
+#if defined REFERENCE_TEST && REFERENCE_TEST == eigen
+	result += (double)(reqsz * reqsz * tpsz);
+#endif
 	int i = 0;
 	for (; i < 3; ++i) {
 		if (result < 500.0) break;
@@ -287,17 +295,19 @@ static void print_requires(double val) {
 }
 void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
 	printf("TestSystem:\nTesting with values type: %s\n", typeid(Type).name());
-	const int reqsz = (n > 50) ? n : 50;
-	print_requires((double)(reqsz * reqsz * sizeof(Type)));
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	printf("Reference test library: Eigen 5.0.0");
 #endif
+	print_requires(n);
 	bool last_res;
 	for (auto TestPtr : workability_tests) {
 		last_res = (*TestPtr)();
 		printf("%s", (last_res) ? "true\n\n" : "false\n\n");
 	}
 	test_time(n, count);
+	do_accuracy_check = true;
+	random_initialization = false;
+	workability_tests.clear();
 }
 
 enum cond_quality { good, ill, singular };
