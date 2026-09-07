@@ -150,11 +150,11 @@ SquareMatrix SquareMatrix::operator+(const SquareMatrix& m) {
 }
 
 SquareMatrix SquareMatrix::operator-(const SquareMatrix& m) {
-	SquareMatrix res(m);
+	SquareMatrix res(*this);
 #pragma omp parallel for collapse(2)
 	for (size_t i = 0; i < m.size; i++) {
 		for (size_t j = 0; j < m.size; j++) {
-			res(i, j) -= this->operator()(i, j);
+			res(i, j) -= m.operator()(i, j);
 		}
 	} return res;
 }
