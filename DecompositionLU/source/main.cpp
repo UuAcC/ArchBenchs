@@ -66,7 +66,7 @@ int main()
 				printf("							L21: A21->L21;\n");
 				printf("							U12: A12->U12;\n");
 				printf("							L22xU22: A22->L22* U22.\n");
-				printf("  -DREFERENCE_TEST=[ eigen | mkl ]		Set library to compare results with. Works with exactly same matrixes.\n");
+				printf("  -DREFERENCE_TEST=[ eigen | mkl ]		[ WARNING! Currently nsupported (WIP) ] Set library to compare results with. Works with exactly same matrixes.\n");
 				printf("  -DTYPE=[int, float, double, etc.]		Set type of values in matrixes.\n");
 				return 0;
 			}

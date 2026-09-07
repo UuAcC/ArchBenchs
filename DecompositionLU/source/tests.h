@@ -18,7 +18,7 @@ struct ReturnedResults {
 	milliseconds InitTime{ 0 };
 	milliseconds LUTime{ 0 };
 	milliseconds TotalTime{ 0 };
-	bool is_correct;
+	bool is_correct = true;
 };
 
 // function pointer for workability test functions
@@ -56,7 +56,7 @@ private:
 	static ReturnedResults single_reference_test(size_t n, size_t iter, const SquareMatrix& A);
 #else
 	// internal function for test_time
-	static ReturnedResults single_test_time(size_t n, size_t iter);
+	static ReturnedResults single_test_time(size_t n, size_t iter, bool huge_divided);
 #endif
 
 	// output functions
