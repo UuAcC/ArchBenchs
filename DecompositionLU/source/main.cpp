@@ -17,11 +17,12 @@ int main()
 	retarget_init();
 	trng_init();
 
+	int argc, i;
+	string argv[15], input, buff;
 	while (1) {
-		int argc = 0;
-		string argv[15], input;
+		argc = 0;
+		input.clear();
 		printf("Enter command line without programm name (args):\n");
-
 		const size_t BUFFER_SIZE = 256;
 		input.resize(BUFFER_SIZE);
 		if (fgets(&input[0], BUFFER_SIZE, stdin) != nullptr) {
@@ -30,9 +31,8 @@ int main()
 				--len;
 			input.resize(len);
 		}
-		printf("Input: %s\n", input.c_str());
-		int i = 0;
-		string buff = "";
+		i = 0;
+		buff = "";
 		while (input[i] != '\0') {
 			if (input[i] != ' ') { buff += input[i]; }
 			else if (!buff.empty()) {
@@ -45,10 +45,9 @@ int main()
 			argv[argc] = buff; ++argc;
 			buff.clear();
 		}
-
 		string fname;
 		size_t size, count;
-		bool hsz = false, hcnt = false;
+		bool hsz = false, hcnt = false, after_help = false;
 		for (int i = 0; i < argc; ++i) {
 			const char* arg = argv[i].c_str();
 			if (strcmp(arg, "--help") == 0) {
@@ -69,7 +68,7 @@ int main()
 				printf("							L22xU22: A22->L22* U22.\n");
 				printf("  -DREFERENCE_TEST=[ eigen | mkl ]		[ WARNING! Currently nsupported (WIP) ] Set library to compare results with. Works with exactly same matrixes.\n");
 				printf("  -DTYPE=[int, float, double, etc.]		Set type of values in matrixes.\n");
-				return 0;
+				after_help = true; break;
 			}
 			else if (strcmp(arg, "--size") == 0 && i + 1 < argc) {
 				size = stoull(argv[i + 1]); hsz = true; ++i;
@@ -96,11 +95,13 @@ int main()
 				TestSystem::enable_random_initialization();
 			}
 		}
-		printf("\nUse \"--help\" to see additional options.\n\n");
-		size_t arg1 = (hsz) ? size : 50;
-		size_t arg2 = (hcnt) ? count : 1;
+		if (!after_help) {
+			printf("\nUse \"--help\" to see additional options.\n\n");
+			size_t arg1 = (hsz) ? size : 50;
+			size_t arg2 = (hcnt) ? count : 1;
 
-		TestSystem::run_all_tests(arg1, arg2, fname);
+			TestSystem::run_all_tests(arg1, arg2, fname);
+		}
 		printf("\n\n=================================================>");
 		printf("\n            - - - New iteration - - -            \n");
 		printf("=================================================>\n\n\n");

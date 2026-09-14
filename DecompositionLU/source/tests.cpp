@@ -82,6 +82,9 @@ bool TestSystem::test4() {
 #define NOW steady_clock::now()
 #endif
 
+#define LU_TESTSYSTEM_BASE_MAXSIZE 145
+#define LU_TESTSYSTEM_DAC_MAXSIZE 250
+
 bool TestSystem::do_accuracy_check = true;
 bool TestSystem::random_initialization = false;
 
@@ -159,13 +162,13 @@ ReturnedResults TestSystem::single_reference_test(size_t n, size_t iter, const S
 ReturnedResults TestSystem::single_test_time(size_t _n, size_t iter) {
 	ReturnedResults results;
 	const size_t n = _n;
-	SquareMatrix A(n);
+	SquareMatrix* A = nullptr;
 	TP start_init = NOW;
-	if (random_initialization) { A = SquareMatrix(n, 1e-6, 1e6); }
-	else { A = SquareMatrix(n, true); }
+	if (random_initialization) { A = new SquareMatrix(n, 1e-6, 1e6); }
+	else { A = new SquareMatrix(n, true); }
 	results.InitTime = duration_cast<milliseconds>(NOW - start_init);
 	if (do_accuracy_check) {
-		SquareMatrix* LU = new SquareMatrix(A);
+		SquareMatrix* LU = new SquareMatrix(*A);
 		TP start_LU = NOW;
 		DecomposerLU::block_get_LU(LU->get_array(), n);
 		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
@@ -174,9 +177,9 @@ ReturnedResults TestSystem::single_test_time(size_t _n, size_t iter) {
 		DecomposerLU::decompose_LU((*LU), L, (*LU));
 		L *= (*LU);
 		delete LU; LU = nullptr;
-		results.is_correct &= (A == L);
-		double infinite_cond_A = (L - A).get_infinite_norm() /
-			(A.get_infinite_norm() * SquareMatrix::mashine_eps);
+		results.is_correct &= (*A == L);
+		double infinite_cond_A = (L - *A).get_infinite_norm() /
+			(A->get_infinite_norm() * SquareMatrix::mashine_eps);
 		printf("\n%u) ", iter + 1);
 		analyze_cond(infinite_cond_A);
 		printf(" Test result: %s. ", results.is_correct ? "true" : "false");
@@ -184,11 +187,12 @@ ReturnedResults TestSystem::single_test_time(size_t _n, size_t iter) {
 	}
 	else {
 		TP start_LU = NOW;
-		DecomposerLU::block_get_LU(A.get_array(), n);
+		DecomposerLU::block_get_LU(A->get_array(), n);
 		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
 		results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
 		results.is_correct = false;
 	}
+	delete A; A = nullptr;
 	return results;
 }
 #endif
@@ -201,13 +205,14 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 #endif
 	printf("Testing with n = %u, ", _n);
 	printf("%u", how_many_times); printf(" times:\n");
-	/*const size_t MAXSZ = (do_accuracy_check) ? 100 : 150;
+	const size_t MAXSZ = (do_accuracy_check) ? LU_TESTSYSTEM_BASE_MAXSIZE : LU_TESTSYSTEM_DAC_MAXSIZE;
 	if (_n > MAXSZ) {
 		printf("FATAL ERROR: Can't run due to insufficient RAM! Run time test with another matrix size.\n");
-		printf("             Max: 100 in normal and 150 with --dac (Type = double). Sizes in multiples of 50 are also supported (WIP).");
-		printf("\n-------------------------------------------------------------------------------------------------\n");
+		printf("             Max: %d in normal and %d with --dac (Type = double).\n", LU_TESTSYSTEM_BASE_MAXSIZE, LU_TESTSYSTEM_DAC_MAXSIZE);
+		printf("             Rerun the execution if crashes with lesser matrix.\n");
+		printf("-------------------------------------------------------------------------------------------------\n");
 		return;
-	}*/
+	}
 	double cc = 0, incc = 0;
 	for (size_t iter = 0; iter < how_many_times; ++iter) {
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
@@ -284,8 +289,8 @@ void TestSystem::enable_random_initialization() { random_initialization = true; 
 static void print_requires(size_t mtxsz, bool doac) {
 	const size_t tpsz = sizeof(Type);
 	const size_t reqsz = (mtxsz > 50) ? mtxsz : 50;
-	double result = (double)(reqsz * reqsz * tpsz * 2);
-	if (doac) result = result * 1.5 + reqsz * tpsz;
+	double result = (double)(reqsz * reqsz * tpsz);
+	if (doac) result = result * 3 + reqsz * tpsz;
 	char* val = getenv("OMP_NUM_THREADS");
 	int threads = (val) ? atoi(val) : 0;
 	result += (double)(tpsz * reqsz * threads);
