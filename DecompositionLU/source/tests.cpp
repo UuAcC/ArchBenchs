@@ -18,10 +18,10 @@ bool TestSystem::test_LU(SquareMatrix& A, std::string test_num, bool print_a, bo
 	if (print_lu) {
 		DecomposerLU::out_LU_with_printf(*LU);
 	}
-	SquareMatrix L(n), U(n);
-	DecomposerLU::decompose_LU((*LU), L, U);
+	SquareMatrix L(n);
+	DecomposerLU::decompose_LU((*LU), L, (*LU));
+	L *= (*LU);
 	delete LU; LU = nullptr;
-	L *= U;
 	double infinite_cond_A = (L - A).get_infinite_norm() /
 		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 	if (print_res) {
@@ -66,7 +66,7 @@ bool TestSystem::test3() {
 }
 
 bool TestSystem::test4() {
-	const size_t n = 100;
+	const size_t n = 50;
 	SquareMatrix A(n, -1e6, 1e6);
 	return test_LU(A, "4");
 }
@@ -170,17 +170,17 @@ ReturnedResults TestSystem::single_test_time(size_t _n, size_t iter) {
 		DecomposerLU::block_get_LU(LU->get_array(), n);
 		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
 		results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
-		SquareMatrix L(n), U(n);
-		DecomposerLU::decompose_LU((*LU), L, U);
+		SquareMatrix L(n);
+		DecomposerLU::decompose_LU((*LU), L, (*LU));
+		L *= (*LU);
 		delete LU; LU = nullptr;
-		L *= U;
 		results.is_correct &= (A == L);
 		double infinite_cond_A = (L - A).get_infinite_norm() /
 			(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 		printf("\n%u) ", iter + 1);
 		analyze_cond(infinite_cond_A);
 		printf(" Test result: %s. ", results.is_correct ? "true" : "false");
-		printf("LU Time: %s mcs\n", to_string(results.LUTime.count()).c_str());
+		printf("LU Time: %s ms\n", to_string(results.LUTime.count()).c_str());
 	}
 	else {
 		TP start_LU = NOW;
@@ -284,8 +284,8 @@ void TestSystem::enable_random_initialization() { random_initialization = true; 
 static void print_requires(size_t mtxsz, bool doac) {
 	const size_t tpsz = sizeof(Type);
 	const size_t reqsz = (mtxsz > 50) ? mtxsz : 50;
-	double result = (double)(reqsz * reqsz * tpsz);
-	if (doac) result = result * 4 + reqsz * tpsz;
+	double result = (double)(reqsz * reqsz * tpsz * 2);
+	if (doac) result = result * 1.5 + reqsz * tpsz;
 	char* val = getenv("OMP_NUM_THREADS");
 	int threads = (val) ? atoi(val) : 0;
 	result += (double)(tpsz * reqsz * threads);

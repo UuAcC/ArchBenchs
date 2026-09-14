@@ -6,7 +6,7 @@ public:
 	// matrix that simultaneously stores L and U is called "united LU matrix"
 
 	// extracts L and U matrices from the united LU matrix
-	static void decompose_LU(const SquareMatrix& A, SquareMatrix& L, SquareMatrix& U);
+	static void decompose_LU(SquareMatrix& A, SquareMatrix& L, SquareMatrix& U);
 	// takes a united LU matrix as input and prints matrices L and U
 	static void print_LU(const SquareMatrix& m, ostream& out);
 	// takes a united LU matrix as input and prints matrices L and U

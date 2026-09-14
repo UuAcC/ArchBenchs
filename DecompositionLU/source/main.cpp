@@ -97,7 +97,7 @@ int main()
 			}
 		}
 		printf("\nUse \"--help\" to see additional options.\n\n");
-		size_t arg1 = (hsz) ? size : 10;
+		size_t arg1 = (hsz) ? size : 50;
 		size_t arg2 = (hcnt) ? count : 1;
 
 		TestSystem::run_all_tests(arg1, arg2, fname);
