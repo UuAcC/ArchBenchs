@@ -30,6 +30,7 @@ int main()
 				--len;
 			input.resize(len);
 		}
+		printf("Input: %s\n", input.c_str());
 		int i = 0;
 		string buff = "";
 		while (input[i] != '\0') {

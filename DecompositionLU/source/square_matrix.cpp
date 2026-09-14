@@ -18,7 +18,7 @@ void* aligned_malloc(size_t size, size_t alignment) {
 #else
 	size_t alloc_size = round_up(size, alignment);
 	/*return aligned_alloc(alignment, alloc_size);*/
-	return malloc(alloc_size * sizeof(Type));
+	return malloc(alloc_size);
 #endif
 }
 void aligned_free(void* ptr) {
@@ -51,14 +51,16 @@ SquareMatrix::SquareMatrix(size_t s, bool init_diag_dominant) {
 	else { std::memset(array, 0, bytes); }
 }
 SquareMatrix::SquareMatrix(size_t s, Type* in_arr) {
+	if (in_arr == nullptr) 
+		throw bad_alloc(); //std::invalid_argument("Initial array is nullptr!");
+
 	size = s;
 	size_t bytes = size * size * TypeSize;
 
 	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
-	if (in_arr != nullptr) { std::memcpy(array, in_arr, bytes); }
-	else throw bad_alloc();//std::invalid_argument("Initial array is nullptr!");
+	std::memcpy(array, in_arr, bytes);
 }
 
 extern "C" uint32_t trng_get_word(void);
@@ -104,6 +106,7 @@ SquareMatrix::SquareMatrix(const SquareMatrix& m) {
 SquareMatrix& SquareMatrix::operator=(const SquareMatrix& m) {
 	if (this == &m) return *this;
 	aligned_free(array);
+	array = nullptr;
 
 	size = m.size;
 	size_t bytes = size * size * TypeSize;
