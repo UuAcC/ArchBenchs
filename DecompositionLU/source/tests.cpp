@@ -21,7 +21,7 @@ bool TestSystem::test_LU(SquareMatrix& A, std::string test_num, bool print_a, bo
 	SquareMatrix L(n), U(n);
 	DecomposerLU::decompose_LU((*LU), L, U);
 	delete LU; LU = nullptr;
-	L = L * U;
+	L *= U;
 	double infinite_cond_A = (L - A).get_infinite_norm() /
 		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
 	if (print_res) {

@@ -218,40 +218,33 @@ SquareMatrix& SquareMatrix::operator-=(const SquareMatrix& m) {
 
 SquareMatrix& SquareMatrix::operator*=(const SquareMatrix& m) {
 	const size_t n = size;
-	const size_t block_size = LU_BLOCK_SIZE;
+	const size_t bs = LU_BLOCK_SIZE;
 
-#pragma omp parallel
-	{
-		Type* buffer = new Type[n]();
-#pragma omp for collapse(2)
-		for (int i0 = 0; i0 < n; i0 += block_size) {
-			for (int j0 = 0; j0 < n; j0 += block_size) {
-				int i1 = std::min(i0 + block_size, n);
-				int j1 = std::min(j0 + block_size, n);
-				for (int k0 = 0; k0 < n; k0 += block_size) {
-					int k1 = std::min(k0 + block_size, n);
-					for (int i = i0; i < i1; ++i) {
-						Type* this_row = this->array + i * n;
-						for (int j = j0; j < j1; ++j) {
-							buffer[j] = 0;
-						}
-						for (int k = k0; k < k1; ++k) {
-							Type this_ik = this_row[k];
-							Type* m_row = m.array + k * n;
-						#pragma omp simd
-							for (int j = j0; j < j1; ++j) {
-								buffer[j] += this_ik * m_row[j];
-							}
-						}
-						for (int j = j0; j < j1; ++j) {
-							this_row[j] = buffer[j];
+	Type* buffer = new Type[n];
+	if (!buffer) throw bad_alloc();
+
+	for (size_t i0 = 0; i0 < n; i0 += bs) {
+		const size_t i1 = std::min(i0 + bs, n);
+		for (size_t i = i0; i < i1; ++i) {
+			Type* this_row = array + i * n;
+			std::memcpy(buffer, this_row, n * sizeof(Type));
+			for (size_t j0 = 0; j0 < n; j0 += bs) {
+				const size_t j1 = std::min(j0 + bs, n);
+				std::memset(this_row + j0, 0, (j1 - j0) * sizeof(Type));
+				for (size_t k0 = 0; k0 < n; k0 += bs) {
+					const size_t k1 = std::min(k0 + bs, n);
+					for (size_t k = k0; k < k1; ++k) {
+						const Type bk = buffer[k];
+						const Type* m_row = m.array + k * n;
+						for (size_t j = j0; j < j1; ++j) {
+							this_row[j] += bk * m_row[j];
 						}
 					}
 				}
 			}
 		}
-		delete[] buffer;
 	}
+	delete[] buffer;
 	return *this;
 }
 
