@@ -156,52 +156,38 @@ ReturnedResults TestSystem::single_reference_test(size_t n, size_t iter, const S
 
 #else
 
-ReturnedResults TestSystem::single_test_time(size_t _n, size_t iter, bool huge_divided) {
+ReturnedResults TestSystem::single_test_time(size_t _n, size_t iter) {
 	ReturnedResults results;
-	size_t n = _n, hdt = 1;
-	if (huge_divided) { hdt = _n * _n / 2500; n = 50; }
-	microseconds inittime{ 0 }, lutime{ 0 }, totaltime{ 0 };
-	for (size_t i = 0; i < hdt; ++i) {
-		SquareMatrix A(n);
-		TP start_init = NOW;
-		if (random_initialization) { A = SquareMatrix(n, 1e-6, 1e6); }
-		else { A = SquareMatrix(n, true); }
-		inittime += duration_cast<microseconds>(NOW - start_init);
-		if (do_accuracy_check) {
-			SquareMatrix* LU = new SquareMatrix(A);
-			TP start_LU = NOW;
-			DecomposerLU::block_get_LU(LU->get_array(), n);
-			lutime += duration_cast<microseconds>(NOW - start_LU);
-			totaltime += duration_cast<microseconds>(NOW - start_init);
-			SquareMatrix L(n), U(n);
-			DecomposerLU::decompose_LU((*LU), L, U);
-			delete LU; LU = nullptr;
-			L *= U;
-			results.is_correct &= (A == L);
-			if (!huge_divided) {
-				double infinite_cond_A = (L - A).get_infinite_norm() /
-					(A.get_infinite_norm() * SquareMatrix::mashine_eps);
-				printf("\n%u) ", iter + 1);
-				analyze_cond(infinite_cond_A);
-				printf(" Test result: %s. ", results.is_correct ? "true" : "false");
-				printf("LU Time: %s mcs\n", to_string(lutime.count()).c_str());
-			}
-		}
-		else { 
-			TP start_LU = NOW;
-			DecomposerLU::block_get_LU(A.get_array(), n);
-			lutime += duration_cast<microseconds>(NOW - start_LU);
-			totaltime += duration_cast<microseconds>(NOW - start_init);
-			results.is_correct = false; 
-		}
-	}
-	results.InitTime = duration_cast<milliseconds>(inittime);
-	results.LUTime = duration_cast<milliseconds>(lutime);
-	results.TotalTime = duration_cast<milliseconds>(totaltime);
-	if (huge_divided && do_accuracy_check) {
-		printf("\n%u) [ Infinite cond(A) unsupported for huge matrices ]", iter + 1);
+	const size_t n = _n;
+	SquareMatrix A(n);
+	TP start_init = NOW;
+	if (random_initialization) { A = SquareMatrix(n, 1e-6, 1e6); }
+	else { A = SquareMatrix(n, true); }
+	results.InitTime = duration_cast<milliseconds>(NOW - start_init);
+	if (do_accuracy_check) {
+		SquareMatrix* LU = new SquareMatrix(A);
+		TP start_LU = NOW;
+		DecomposerLU::block_get_LU(LU->get_array(), n);
+		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
+		results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
+		SquareMatrix L(n), U(n);
+		DecomposerLU::decompose_LU((*LU), L, U);
+		delete LU; LU = nullptr;
+		L *= U;
+		results.is_correct &= (A == L);
+		double infinite_cond_A = (L - A).get_infinite_norm() /
+			(A.get_infinite_norm() * SquareMatrix::mashine_eps);
+		printf("\n%u) ", iter + 1);
+		analyze_cond(infinite_cond_A);
 		printf(" Test result: %s. ", results.is_correct ? "true" : "false");
-		printf("LU Time: %s\n", to_string(results.LUTime.count()).c_str());
+		printf("LU Time: %s mcs\n", to_string(results.LUTime.count()).c_str());
+	}
+	else {
+		TP start_LU = NOW;
+		DecomposerLU::block_get_LU(A.get_array(), n);
+		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
+		results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
+		results.is_correct = false;
 	}
 	return results;
 }
@@ -213,23 +199,22 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	chrono::milliseconds time_LU_ref{ 1000000000 };
 #endif
-	printf("Testing with n = %u, ", _n); 
+	printf("Testing with n = %u, ", _n);
 	printf("%u", how_many_times); printf(" times:\n");
-	const size_t MAXSZ = (do_accuracy_check) ? 60 : 150;
-	bool huge_divided = _n > MAXSZ && _n % 50 == 0;
-	if (_n > MAXSZ && !huge_divided) {
+	/*const size_t MAXSZ = (do_accuracy_check) ? 100 : 150;
+	if (_n > MAXSZ) {
 		printf("FATAL ERROR: Can't run due to insufficient RAM! Run time test with another matrix size.\n");
-		printf("             Max: 60 in normal and 150 with --dac (Type = double). Sizes in multiples of 50 are also supported (WIP).");
+		printf("             Max: 100 in normal and 150 with --dac (Type = double). Sizes in multiples of 50 are also supported (WIP).");
 		printf("\n-------------------------------------------------------------------------------------------------\n");
 		return;
-	}
+	}*/
 	double cc = 0, incc = 0;
 	for (size_t iter = 0; iter < how_many_times; ++iter) {
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 		SquareMatrix* A = new SquareMatrix(n);
 		ReturnedResults res = single_test_time(n, iter, A);
 #else
-		ReturnedResults res = single_test_time(_n, iter, false);
+		ReturnedResults res = single_test_time(_n, iter);
 #endif
 		time_init = (time_init > res.InitTime) ? res.InitTime : time_init;
 		time_LU = (time_LU > res.LUTime) ? res.LUTime : time_LU;
@@ -272,12 +257,12 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 // ----------------------------------------< printing >------------------------------------------------------------
 
 void TestSystem::print_test_start(std::string s) {
-	printf("\n------------------------------------------- Test %s -------------------------------------------\n", 
+	printf("\n------------------------------------------- Test %s -------------------------------------------\n",
 		s.c_str());
 }
 
 void TestSystem::print_test_end(std::string s) {
-	printf("----------------------------------------------------------------------------------------------\nTest %s: ", 
+	printf("----------------------------------------------------------------------------------------------\nTest %s: ",
 		s.c_str());
 }
 
@@ -296,9 +281,9 @@ void TestSystem::disable_accuracy_check() { do_accuracy_check = false; }
 
 void TestSystem::enable_random_initialization() { random_initialization = true; }
 
-static void print_requires(size_t mtxsz, size_t MAXSZ, bool doac) {
+static void print_requires(size_t mtxsz, bool doac) {
 	const size_t tpsz = sizeof(Type);
-	const size_t reqsz = (mtxsz > 50 && !(mtxsz > MAXSZ && mtxsz % 50 == 0)) ? mtxsz : 50;
+	const size_t reqsz = (mtxsz > 50) ? mtxsz : 50;
 	double result = (double)(reqsz * reqsz * tpsz);
 	if (doac) result = result * 4 + reqsz * tpsz;
 	char* val = getenv("OMP_NUM_THREADS");
@@ -312,7 +297,7 @@ static void print_requires(size_t mtxsz, size_t MAXSZ, bool doac) {
 		if (result < 500.0) break;
 		result /= 1024.0;
 	}
-	printf("Requires >= %3f %s of RAM\n", result, 
+	printf("Requires >= %3f %s of RAM\n", result,
 		(i == 0) ? "bytes" : ((i == 1) ? "Kb" : ((i == 2) ? "Mb" : "Gb")));
 }
 void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
@@ -320,7 +305,7 @@ void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
 #if defined REFERENCE_TEST && REFERENCE_TEST == eigen
 	printf("Reference test library: Eigen 5.0.0");
 #endif
-	print_requires(n, (do_accuracy_check) ? 60 : 150, do_accuracy_check);
+	print_requires(n, do_accuracy_check);
 	bool last_res;
 	for (auto TestPtr : workability_tests) {
 		last_res = (*TestPtr)();
