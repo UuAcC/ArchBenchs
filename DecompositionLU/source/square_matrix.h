@@ -14,8 +14,8 @@ using namespace std;
 #endif 
 #define LESSER_LU_BLOCK_SIZE LU_BLOCK_SIZE >> 1
 
-#ifdef working_type
-typedef working_type Type;
+#ifdef LU_MATRIX_ELEM_TYPE
+typedef LU_MATRIX_ELEM_TYPE Type;
 #else 
 typedef double Type;
 #endif 

@@ -82,8 +82,10 @@ bool TestSystem::test4() {
 #define NOW steady_clock::now()
 #endif
 
-#define LU_TESTSYSTEM_BASE_MAXSIZE 145
-#define LU_TESTSYSTEM_DAC_MAXSIZE 250
+#define LU_TESTSYSTEM_DOUBLE_BASE_MAXSIZE 145
+#define LU_TESTSYSTEM_DOUBLE_DAC_MAXSIZE 250
+#define LU_TESTSYSTEM_FLOAT_BASE_MAXSIZE 200
+#define LU_TESTSYSTEM_FLOAT_DAC_MAXSIZE 355
 
 bool TestSystem::do_accuracy_check = true;
 bool TestSystem::random_initialization = false;
@@ -205,10 +207,13 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 #endif
 	printf("Testing with n = %u, ", _n);
 	printf("%u", how_many_times); printf(" times:\n");
-	const size_t MAXSZ = (do_accuracy_check) ? LU_TESTSYSTEM_BASE_MAXSIZE : LU_TESTSYSTEM_DAC_MAXSIZE;
+	const size_t tpsz = sizeof(Type);
+	const int bsmxsz = (tpsz == 8) ? LU_TESTSYSTEM_DOUBLE_BASE_MAXSIZE : LU_TESTSYSTEM_FLOAT_BASE_MAXSIZE;
+	const int dacmxsz = (tpsz == 8) ? LU_TESTSYSTEM_DOUBLE_DAC_MAXSIZE : LU_TESTSYSTEM_FLOAT_DAC_MAXSIZE;
+	const size_t MAXSZ = (do_accuracy_check) ? bsmxsz : dacmxsz;
 	if (_n > MAXSZ) {
 		printf("FATAL ERROR: Can't run due to insufficient RAM! Run time test with another matrix size.\n");
-		printf("             Max: %d in normal and %d with --dac (Type = double).\n", LU_TESTSYSTEM_BASE_MAXSIZE, LU_TESTSYSTEM_DAC_MAXSIZE);
+		printf("             Max: %d in normal and %d with --dac (Type = %s).\n", bsmxsz, dacmxsz, typeid(Type).name());
 		printf("             Rerun the execution if crashes with lesser matrix.\n");
 		printf("-------------------------------------------------------------------------------------------------\n");
 		return;

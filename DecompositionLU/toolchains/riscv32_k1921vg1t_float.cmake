@@ -1,0 +1,2 @@
+include("${CMAKE_CURRENT_LIST_DIR}/base_riscv32_k1921vg1t.cmake")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLU_MATRIX_ELEM_TYPE=float")

@@ -51,9 +51,9 @@ if(DEFINED LU_BLOCK_SIZE)
     )
 endif()
 
-if(DEFINED TYPE)
+if(DEFINED LU_MATRIX_ELEM_TYPE)
 target_compile_definitions(${project_name} PRIVATE 
-        working_type=${TYPE}
+        LU_MATRIX_ELEM_TYPE=${LU_MATRIX_ELEM_TYPE}
     )
 endif()
 
