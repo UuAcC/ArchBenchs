@@ -6,6 +6,7 @@ extern "C" {
 #include "retarget.h"
 #include <system_k1921vg1t.h>
 	void trng_init(void);
+	void BSP_SRAM_Init(void);
 }
 
 using namespace std;
@@ -14,6 +15,7 @@ int main()
 {
 	SystemInit();
 	SystemCoreClockUpdate();
+	BSP_SRAM_Init();
 	retarget_init();
 	trng_init();
 

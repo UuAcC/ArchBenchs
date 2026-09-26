@@ -138,17 +138,23 @@ void BSP_SRAM_Init()
 	RCU->SDRAMCFG_bit.CLKEN = 1;
 	RCU->SDRAMCFG_bit.DIVN = 0;
 	RCU->SDRAMCFG_bit.DIVEN = 1;
-	//Delay 100us
-	tmp=1200;
-	while(tmp--) __asm("NOP");
+
 	RCU->SDRAMCFG_bit.RSTDIS = 1;
+
+	////Delay 100us
+	//tmp=1200;
+	//while(tmp--) __asm("NOP");
+
+	// Задержка ~200 мкс
+	// Изначально вместо 200000000 здесь было SystemCoreClock
+	for (volatile uint32_t i = 0; i < (200000000 / 1000000) * 300; ++i) __asm("NOP");
 
 	//SDRAM Mode CONFIG
 	SDRAM->MODE_bit.OPMODE = 0;
 	SDRAM->MODE_bit.WBMODE = 0; // Режим пакетной записи. 0 - выключен
 	SDRAM->MODE_bit.BURST_TYPE = 0; // Тип пакета. 0 - последовательный
-	SDRAM->MODE_bit.BURST_LENGTH = 0; // Длина пакета - 1.
-	SDRAM->MODE_bit.CAS_LATENCY = 2; //Задержка CAS. Задержка в тактовых циклах между регистрацией команды чтения
+	SDRAM->MODE_bit.BURST_LENGTH = 3; // Длина пакета - 1.
+	SDRAM->MODE_bit.CAS_LATENCY = 3; //Задержка CAS. Задержка в тактовых циклах между регистрацией команды чтения
 									 //и доступностью первого фрагмента выходных данных
 
 	//SDRAM Control CONFIG
@@ -160,7 +166,7 @@ void BSP_SRAM_Init()
 
 	//SDRAM Refresh CONFIG
 	SDRAM->REFRESH_bit.RF_MAX = 2; // Максимальное количество строк, обновляемых за один раз
-	SDRAM->REFRESH_bit.RF_TIME = 120; // Период между командами автоматического обновления, выдаваемыми контроллером
+	SDRAM->REFRESH_bit.RF_TIME = 936; // Период между командами автоматического обновления, выдаваемыми контроллером
 
 	SDRAM->CONTROL_bit.ENABLE = 1; // Бит включения SDRAM контроллера
 	while (SDRAM -> STATUS  == 0) {};

@@ -210,7 +210,7 @@ void TestSystem::test_time(size_t _n, size_t how_many_times) {
 	const size_t tpsz = sizeof(Type);
 	const int bsmxsz = (tpsz == 8) ? LU_TESTSYSTEM_DOUBLE_BASE_MAXSIZE : LU_TESTSYSTEM_FLOAT_BASE_MAXSIZE;
 	const int dacmxsz = (tpsz == 8) ? LU_TESTSYSTEM_DOUBLE_DAC_MAXSIZE : LU_TESTSYSTEM_FLOAT_DAC_MAXSIZE;
-	const size_t MAXSZ = (do_accuracy_check) ? bsmxsz : dacmxsz;
+	const size_t MAXSZ = (do_accuracy_check) ? 2000 : 2000; //bsmxsz : dacmxsz;
 	if (_n > MAXSZ) {
 		printf("FATAL ERROR: Can't run due to insufficient RAM! Run time test with another matrix size.\n");
 		printf("             Max: %d in normal and %d with --dac (Type = %s).\n", bsmxsz, dacmxsz, typeid(Type).name());

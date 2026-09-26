@@ -80,13 +80,29 @@ int _write(int file, char *ptr, int len) {
     return len;
 }
 
-void *_sbrk(ptrdiff_t incr)
+//void *_sbrk(ptrdiff_t incr)
+//{
+//    extern char _ebss[];
+//    static char *heap_end = _ebss;
+//    char *base = heap_end;
+//    heap_end += incr;
+//    return base;
+//}
+
+#include "bsp.h"
+
+#define SDRAM_HEAP_SIZE   (8 * 1024 * 1024)
+
+void* _sbrk(ptrdiff_t incr)
 {
-    extern char _ebss[];
-    static char *heap_end = _ebss;
-    char *base = heap_end;
+    static char* heap_end = (char*)MEM_SDRAM_BASE;
+    char* prev_heap_end = heap_end;
+    if (heap_end + incr > (char*)(MEM_SDRAM_BASE + SDRAM_HEAP_SIZE)) {
+        errno = ENOMEM;
+        return (void*)-1;
+    }
     heap_end += incr;
-    return base;
+    return (void*)prev_heap_end;
 }
 
 // Обработчик для errno (может потребоваться)
