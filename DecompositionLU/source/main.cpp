@@ -69,7 +69,7 @@ int main()
 				printf("							U12: A12->U12;\n");
 				printf("							L22xU22: A22->L22* U22.\n");
 				printf("  -DREFERENCE_TEST=[ eigen | mkl ]		[ WARNING! Currently nsupported (WIP) ] Set library to compare results with. Works with exactly same matrixes.\n");
-				printf("  -DTYPE=[int, float, double, etc.]		Set type of values in matrixes.\n");
+				printf("  -DLU_MATRIX_ELEM_TYPE=[int, float, double, etc.]		Set type of values in matrixes.\n");
 				after_help = true; break;
 			}
 			else if (strcmp(arg, "--size") == 0 && i + 1 < argc) {
