@@ -326,8 +326,24 @@ void TestSystem::disable_accuracy_check() { do_accuracy_check = false; }
 
 void TestSystem::enable_random_initialization() { random_initialization = true; }
 
-static double bytes_to_Gb(double val) {
-	return val / 268435456.0;
+static void print_requires(size_t mtxsz, std::ostream& ostr) { //, bool doac) {
+	const size_t tpsz = sizeof(Type);
+	const size_t reqsz = (mtxsz > 100) ? mtxsz : 100;
+	double result = (double)(reqsz * reqsz * tpsz);
+	//if (doac) result = result * 3 + reqsz * tpsz;
+	char* val = getenv("OMP_NUM_THREADS");
+	int threads = (val) ? atoi(val) : 0;
+	result += (double)(tpsz * reqsz * threads);
+#if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
+	result += (double)(reqsz * reqsz * tpsz);
+#endif
+	int i = 0;
+	for (; i < 3; ++i) {
+		if (result < 500.0) break;
+		result /= 1024.0;
+	}
+	ostr << "Requires >= " << result;
+	ostr << (i == 0) ? "bytes" : ((i == 1) ? "Kb" : ((i == 2) ? "Mb" : "Gb")) << " of RAM\n";
 }
 void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
 	if (filename != "") {
@@ -340,9 +356,7 @@ void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
 	}
 	print("TestSystem:\nTesting with values type: ");
 	print(typeid(Type).name());
-	print("\nRequires "); 
-	print(bytes_to_Gb((double)(n * n * sizeof(Type)))); 
-	print("Gb of RAM\n");
+	print_requires(n, *out);
 	bool consol = (out == &cout);
 #if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
 	if (consol) { *out << "\033[33m"; }
