@@ -5,26 +5,23 @@
 
 std::vector<WorkabilityTestPtr> TestSystem::workability_tests;
 
-bool TestSystem::test_LU(SquareMatrix& A, std::string test_num,
-	bool print_a, bool print_lu, bool print_res) {
-
-	const size_t n = A.get_size();
-	SquareMatrix LU(A);
-	DecomposerLU::block_get_LU(LU.get_array(), n, n);
-	SquareMatrix L(n), U(n);
-	DecomposerLU::decompose_LU(LU, L, U);
-	SquareMatrix Res = L * U;
-	double infinite_cond_A = (Res - A).get_infinite_norm() /
-		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
-
+bool TestSystem::test_LU(SquareMatrix& A, std::string test_num, bool print_a, bool print_lu, bool print_res) {
 	print_test_start(test_num);
-	analyze_cond(infinite_cond_A); p_endl(); p_endl();
 	if (print_a) { print("Matrix A:\n"); print(A); p_endl(); }
-	if (print_lu) { DecomposerLU::print_LU(LU, *out); }
-	if (print_res) { print("Matrix Res = L * U:\n"); print(Res); }
+	const size_t n = A.get_size();
+	SquareMatrix* LU = new SquareMatrix(A);
+	DecomposerLU::block_get_LU(LU->get_array(), n);
+	if (print_lu) { DecomposerLU::print_LU(*LU, *out); }
+	SquareMatrix L(n);
+	DecomposerLU::decompose_LU((*LU), L, (*LU));
+	L *= (*LU);
+	delete LU; LU = nullptr;
+	double infinite_cond_A = (L - A).get_infinite_norm() /
+		(A.get_infinite_norm() * SquareMatrix::mashine_eps);
+	if (print_res) { print("Matrix Res = L * U:\n"); print(L); }
+	p_endl(); analyze_cond(infinite_cond_A); p_endl();
 	print_test_end(test_num);
-
-	return A == Res;
+	return A == L;
 }
 
 bool TestSystem::test1() {
@@ -205,30 +202,24 @@ ReturnedResults TestSystem::single_reference_test(size_t n, size_t iter, const S
 #else
 ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 	ReturnedResults results;
+	SquareMatrix* A = nullptr;
 	TP start_init = NOW;
-
-	SquareMatrix A(n);
-	if (random_initialization) { A = SquareMatrix(n, 1e-6, 1e6); }
-	else { A = SquareMatrix(n, true); }
-	SquareMatrix LU(A);
-
+	if (random_initialization) { A = new SquareMatrix(n, 1e-6, 1e6); }
+	else { A = new SquareMatrix(n, true); }
 	results.InitTime = duration_cast<milliseconds>(NOW - start_init);
-
-	TP start_LU = NOW;
-	DecomposerLU::block_get_LU(LU.get_array(), n, n);
-	results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
-
-	results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
-
 	if (do_accuracy_check) {
-		SquareMatrix L(n), U(n);
-		DecomposerLU::decompose_LU(LU, L, U);
-		SquareMatrix Res = L * U;
-		double infinite_cond_A = (Res - A).get_infinite_norm() /
-			(A.get_infinite_norm() * SquareMatrix::mashine_eps);
-
-		results.is_correct = (A == Res);
-
+		SquareMatrix* LU = new SquareMatrix(*A);
+		TP start_LU = NOW;
+		DecomposerLU::block_get_LU(LU->get_array(), n);
+		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
+		results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
+		SquareMatrix L(n);
+		DecomposerLU::decompose_LU((*LU), L, (*LU));
+		L *= (*LU);
+		delete LU; LU = nullptr;
+		results.is_correct &= (*A == L);
+		double infinite_cond_A = (L - *A).get_infinite_norm() /
+			(A->get_infinite_norm() * SquareMatrix::mashine_eps);
 		p_endl();
 		print(iter + 1); print(") ");
 		analyze_cond(infinite_cond_A);
@@ -241,7 +232,14 @@ ReturnedResults TestSystem::single_test_time(size_t n, size_t iter) {
 		print(results.LUTime.count());
 		p_endl();
 	}
-	else { results.is_correct = false; }
+	else {
+		TP start_LU = NOW;
+		DecomposerLU::block_get_LU(A->get_array(), n);
+		results.LUTime = duration_cast<milliseconds>(NOW - start_LU);
+		results.TotalTime = duration_cast<milliseconds>(NOW - start_init);
+		results.is_correct = false;
+	}
+	delete A; A = nullptr;
 	return results;
 }
 #endif

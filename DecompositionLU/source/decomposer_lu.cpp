@@ -18,13 +18,13 @@ void pbt(const char* mess, long long value) {
 
 #endif
 
-void DecomposerLU::block_get_LU(Type* matrix_array_p, size_t curr_sz, size_t start_sz) 
+void DecomposerLU::block_get_LU(Type* matrix_array_p, size_t matrix_size)
 {
 	const int block_size = BLOCK_SIZE;
 	const int kbs = LESSER_BLOCK_SIZE;
 
-	int curr_size = (int)curr_sz;
-	const int start_size = (int)start_sz;
+	int curr_size = (int)matrix_size;
+	const int start_size = (int)matrix_size;
 	const int iter_max = start_size * start_size;
 	const int iter_step = block_size * start_size + block_size;
 
@@ -314,16 +314,21 @@ void DecomposerLU::get_LU(SquareMatrix& matrix) {
 	}
 }
 
-void DecomposerLU::decompose_LU(const SquareMatrix& A, SquareMatrix& L, SquareMatrix& U) {
+void DecomposerLU::decompose_LU(SquareMatrix& A, SquareMatrix& L, SquareMatrix& U) {
 	const size_t n = A.get_size();
-	for (size_t i = 0; i < n; i++)
-		for (size_t j = 0; j < n; j++) {
-			if (j < i) L(i, j) = A(i, j);
-			if (j == i) L(i, j) = 1;
+	for (size_t i = 0; i < n; ++i) {
+		for (size_t j = 0; j < n; ++j) {
+			if (j < i) {
+				L(i, j) = A(i, j);
+				U(i, j) = 0;
+			}
+			if (j >= i) {
+				if (j == i) L(i, j) = 1;
+				else L(i, j) = 0;
+				U(i, j) = A(i, j);
+			}
 		}
-	for (size_t i = 0; i < n; i++)
-		for (size_t j = 0; j < n; j++)
-			if (j >= i) U(i, j) = A(i, j);
+	}
 }
 
 void DecomposerLU::print_LU(const SquareMatrix& m, ostream& out) {
