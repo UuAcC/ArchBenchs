@@ -7,10 +7,10 @@
 
 using namespace std;
 
-#ifndef BLOCK_SIZE
-#define BLOCK_SIZE 64 // -DBLOCK_SIZE={some value}
+#ifndef LU_BLOCK_SIZE
+#define LU_BLOCK_SIZE 64 // -DLU_BLOCK_SIZE={some value}
 #endif 
-#define LESSER_BLOCK_SIZE BLOCK_SIZE >> 1
+#define LU_LESSER_BLOCK_SIZE LU_BLOCK_SIZE >> 1
 
 #ifdef working_type
 typedef working_type Type;
@@ -57,6 +57,10 @@ public:
 	SquareMatrix operator+(const SquareMatrix& m);
 	SquareMatrix operator-(const SquareMatrix& m);
 	SquareMatrix operator*(const SquareMatrix& m);
+
+	SquareMatrix& operator+=(const SquareMatrix& m);
+	SquareMatrix& operator-=(const SquareMatrix& m);
+	SquareMatrix& operator*=(const SquareMatrix& m);
 
 	//  comparison 
 

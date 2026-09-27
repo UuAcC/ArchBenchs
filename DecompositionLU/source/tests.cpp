@@ -326,11 +326,11 @@ void TestSystem::disable_accuracy_check() { do_accuracy_check = false; }
 
 void TestSystem::enable_random_initialization() { random_initialization = true; }
 
-static void print_requires(size_t mtxsz, std::ostream& ostr) { //, bool doac) {
+static void print_requires(size_t mtxsz, bool doac, std::ostream& ostr) {
 	const size_t tpsz = sizeof(Type);
 	const size_t reqsz = (mtxsz > 100) ? mtxsz : 100;
 	double result = (double)(reqsz * reqsz * tpsz);
-	//if (doac) result = result * 3 + reqsz * tpsz;
+	if (doac) result = result * 3 + (reqsz * LU_BLOCK_SIZE + LU_BLOCK_SIZE * LU_BLOCK_SIZE) * tpsz;
 	char* val = getenv("OMP_NUM_THREADS");
 	int threads = (val) ? atoi(val) : 0;
 	result += (double)(tpsz * reqsz * threads);
@@ -356,7 +356,7 @@ void TestSystem::run_all_tests(size_t n, size_t count, std::string filename) {
 	}
 	print("TestSystem:\nTesting with values type: ");
 	print(typeid(Type).name());
-	print_requires(n, *out);
+	print_requires(n, do_accuracy_check, *out);
 	bool consol = (out == &cout);
 #if defined REFERENCE_TEST && (REFERENCE_TEST == eigen || REFERENCE_TEST == mkl)
 	if (consol) { *out << "\033[33m"; }

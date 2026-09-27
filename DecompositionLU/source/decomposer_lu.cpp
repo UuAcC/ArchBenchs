@@ -20,8 +20,8 @@ void pbt(const char* mess, long long value) {
 
 void DecomposerLU::block_get_LU(Type* matrix_array_p, size_t matrix_size)
 {
-	const int block_size = BLOCK_SIZE;
-	const int kbs = LESSER_BLOCK_SIZE;
+	const int block_size = LU_BLOCK_SIZE;
+	const int kbs = LU_LESSER_BLOCK_SIZE;
 
 	int curr_size = (int)matrix_size;
 	const int start_size = (int)matrix_size;

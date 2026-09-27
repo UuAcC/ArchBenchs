@@ -37,7 +37,7 @@ SquareMatrix::SquareMatrix(size_t s, bool init_diag_dominant) {
 	size_t sz_sqr = size * size;
 	size_t bytes = sz_sqr * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	if (init_diag_dominant) {
@@ -53,7 +53,7 @@ SquareMatrix::SquareMatrix(size_t s, Type* in_arr) {
 	size = s;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	if (in_arr != nullptr) { std::memcpy(array, in_arr, bytes); }
@@ -63,7 +63,7 @@ SquareMatrix::SquareMatrix(size_t s, Type min, Type max) {
 	size = s;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	random_device rd; mt19937 gen(rd());
@@ -91,7 +91,7 @@ SquareMatrix::SquareMatrix(const SquareMatrix& m) {
 	size = m.size;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	memcpy(array, m.array, bytes);
@@ -103,7 +103,7 @@ SquareMatrix& SquareMatrix::operator=(const SquareMatrix& m) {
 	size = m.size;
 	size_t bytes = size * size * TypeSize;
 
-	array = (Type*)aligned_malloc(bytes, BLOCK_SIZE);
+	array = (Type*)aligned_malloc(bytes, LU_BLOCK_SIZE);
 	if (!array) throw bad_alloc();
 
 	memcpy(array, m.array, bytes);
@@ -157,7 +157,7 @@ SquareMatrix SquareMatrix::operator-(const SquareMatrix& m) {
 SquareMatrix SquareMatrix::operator*(const SquareMatrix& m)
 {
 	const size_t n = size;
-	const size_t block_size = BLOCK_SIZE;
+	const size_t block_size = LU_BLOCK_SIZE;
 
 	SquareMatrix res(n);
 
@@ -188,6 +188,73 @@ SquareMatrix SquareMatrix::operator*(const SquareMatrix& m)
 		}
 	}
 	return res;
+}
+
+SquareMatrix& SquareMatrix::operator+=(const SquareMatrix& m) {
+#pragma omp parallel for collapse(2)
+	for (size_t i = 0; i < m.size; i++) {
+		for (size_t j = 0; j < m.size; j++) {
+			this->operator()(i, j) += m(i, j);
+		}
+	} return *this;
+}
+
+SquareMatrix& SquareMatrix::operator-=(const SquareMatrix& m) {
+#pragma omp parallel for collapse(2)
+	for (size_t i = 0; i < m.size; i++) {
+		for (size_t j = 0; j < m.size; j++) {
+			this->operator()(i, j) -= m(i, j);
+		}
+	} return *this;
+}
+
+SquareMatrix& SquareMatrix::operator*=(const SquareMatrix& m) {
+	const size_t n = size;
+	const size_t bs = LU_BLOCK_SIZE;
+	const long long n_i0 = (long long)((n + bs - 1) / bs);
+
+#pragma omp parallel for schedule(static)
+	for (long long bi = 0; bi < n_i0; ++bi) {
+		const size_t i0 = (size_t)bi * bs;
+		const size_t i1 = std::min(i0 + bs, n);
+		const size_t ib = i1 - i0;
+
+		Type* buffer_orig = new Type[bs * n];
+		Type* buffer_acc = new Type[bs * bs];
+
+		for (size_t i = 0; i < ib; ++i) {
+			std::memcpy(buffer_orig + i * n,
+				array + (i0 + i) * n,
+				n * sizeof(Type));
+		}
+		for (size_t j0 = 0; j0 < n; j0 += bs) {
+			const size_t j1 = std::min(j0 + bs, n);
+			const size_t jb = j1 - j0;
+			std::memset(buffer_acc, 0, ib * jb * sizeof(Type));
+			for (size_t k0 = 0; k0 < n; k0 += bs) {
+				const size_t k1 = std::min(k0 + bs, n);
+				for (size_t i = 0; i < ib; ++i) {
+					const Type* orig_row = buffer_orig + i * n;
+					Type* acc_row = buffer_acc + i * jb;
+					for (size_t k = k0; k < k1; ++k) {
+						const Type aik = orig_row[k];
+						const Type* m_row = m.array + k * n;
+						for (size_t j = 0; j < jb; ++j) {
+							acc_row[j] += aik * m_row[j0 + j];
+						}
+					}
+				}
+			}
+			for (size_t i = 0; i < ib; ++i) {
+				std::memcpy(array + (i0 + i) * n + j0,
+					buffer_acc + i * jb,
+					jb * sizeof(Type));
+			}
+		}
+		delete[] buffer_orig;
+		delete[] buffer_acc;
+	}
+	return *this;
 }
 
 // ----------------------------------------------------------------------------------------------------------------
